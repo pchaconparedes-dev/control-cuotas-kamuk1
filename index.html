@@ -20,13 +20,13 @@
     </div>
 
     <!-- CONTENIDO PRINCIPAL DE LA APP -->
-    <div id="appContenido" class="max-w-5xl mx-auto space-y-6 hidden">
+    <div id="appContenido" class="max-w-6xl mx-auto space-y-6 hidden">
         
         <!-- ENCABEZADO -->
         <header class="bg-blue-900 text-white p-6 rounded-xl shadow-md flex justify-between items-center flex-wrap gap-4">
             <div>
                 <h1 class="text-2xl font-bold">Club Deportivo Kamuk</h1>
-                <p class="text-blue-200 text-sm">Gestión de Cuotas y Patrocinadores</p>
+                <p class="text-blue-200 text-sm">Gestión de Cuotas, Becas y Sponsors</p>
             </div>
             <div class="flex gap-2 flex-wrap">
                 <button id="btnNuevoMain" onclick="abrirModalJugador()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">+ Nuevo Jugador</button>
@@ -39,7 +39,7 @@
         <!-- TARJETAS DE RESUMEN FINANCIERO -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-900">
-                <span class="text-xs text-gray-500 font-bold uppercase">Valor Cuota Jugador</span>
+                <span class="text-xs text-gray-500 font-bold uppercase">Valor Cuota Base</span>
                 <div class="flex items-center gap-2 mt-1">
                     <span class="text-lg font-bold text-gray-800">$</span>
                     <input type="number" id="valorCuota" value="15000" onchange="guardarMontoCuota()" class="font-bold text-lg text-gray-800 border-b border-gray-300 w-28 focus:outline-none focus:border-blue-900">
@@ -57,9 +57,10 @@
 
         <!-- PESTAÑAS DE NAVEGACIÓN -->
         <div class="flex border-b border-gray-300 gap-2 flex-wrap">
-            <button id="tabGeneral" onclick="cambiarPestana('general')" class="py-2 px-4 font-bold border-b-2 border-blue-900 text-blue-900 bg-white rounded-t-lg shadow-sm">📋 Lista de Jugadores</button>
+            <button id="tabGeneral" onclick="cambiarPestana('general')" class="py-2 px-4 font-bold border-b-2 border-blue-900 text-blue-900 bg-white rounded-t-lg shadow-sm">📋 Jugadores</button>
+            <button id="tabBecas" onclick="cambiarPestana('becas')" class="py-2 px-4 font-bold border-b-2 border-transparent text-amber-700 hover:text-amber-900 rounded-t-lg">🎓 Becas / Descuentos</button>
             <button id="tabAvisos" onclick="cambiarPestana('avisos')" class="py-2 px-4 font-bold border-b-2 border-transparent text-gray-500 hover:text-blue-900 rounded-t-lg">📲 Avisos Pendientes</button>
-            <button id="tabSponsors" onclick="cambiarPestana('sponsors')" class="py-2 px-4 font-bold border-b-2 border-transparent text-purple-700 hover:text-purple-900 rounded-t-lg">🏢 Sponsors / Patrocinadores</button>
+            <button id="tabSponsors" onclick="cambiarPestana('sponsors')" class="py-2 px-4 font-bold border-b-2 border-transparent text-purple-700 hover:text-purple-900 rounded-t-lg">🏢 Sponsors</button>
         </div>
 
         <!-- FILTROS Y BUSCADOR -->
@@ -103,7 +104,7 @@
             </div>
         </div>
 
-        <!-- VISTA GENERAL JUGADORES -->
+        <!-- VISTA 1: GENERAL JUGADORES -->
         <div id="vistaGeneral" class="bg-white rounded-xl shadow-sm overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
@@ -111,7 +112,9 @@
                         <th class="p-3">Jugador</th>
                         <th class="p-3">Categoría</th>
                         <th class="p-3">Tutor / Teléfono</th>
+                        <th class="p-3">Cuota Mes</th>
                         <th class="p-3">Estado Mes</th>
+                        <th class="p-3 text-center">Deuda Anual</th>
                         <th class="p-3 text-center">Acciones</th>
                     </tr>
                 </thead>
@@ -119,7 +122,25 @@
             </table>
         </div>
 
-        <!-- VISTA AVISOS PENDIENTES -->
+        <!-- VISTA 2: BECAS Y DESCUENTOS -->
+        <div id="vistaBecas" class="bg-white rounded-xl shadow-sm overflow-x-auto hidden p-4">
+            <h2 class="text-lg font-bold text-amber-800 mb-2">🎓 Asignación de Becas y Descuentos Hermanos/Familiares</h2>
+            <p class="text-xs text-gray-500 mb-4">Aplica reducciones sobre el valor base de la cuota social.</p>
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-amber-50 text-amber-900 text-sm">
+                        <th class="p-3">Jugador</th>
+                        <th class="p-3">Categoría</th>
+                        <th class="p-3">Tutor / Responsable</th>
+                        <th class="p-3">Descuento / Beca</th>
+                        <th class="p-3">Valor Final Cuota</th>
+                    </tr>
+                </thead>
+                <tbody id="listaBecas" class="divide-y divide-gray-100 text-sm"></tbody>
+            </table>
+        </div>
+
+        <!-- VISTA 3: AVISOS PENDIENTES -->
         <div id="vistaAvisos" class="bg-white rounded-xl shadow-sm overflow-x-auto hidden p-4">
             <h2 class="text-lg font-bold text-red-700 mb-3">⚠️ Recordatorios de Cuotas Pendientes</h2>
             <table class="w-full text-left border-collapse">
@@ -128,6 +149,7 @@
                         <th class="p-3">Jugador</th>
                         <th class="p-3">Categoría</th>
                         <th class="p-3">Tutor / Teléfono</th>
+                        <th class="p-3 text-center">Deuda Total</th>
                         <th class="p-3 text-center">Acción WhatsApp</th>
                     </tr>
                 </thead>
@@ -135,12 +157,12 @@
             </table>
         </div>
 
-        <!-- VISTA SPONSORS -->
+        <!-- VISTA 4: SPONSORS -->
         <div id="vistaSponsors" class="bg-white rounded-xl shadow-sm overflow-x-auto hidden p-4">
             <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
                 <div>
                     <h2 class="text-lg font-bold text-purple-900">🏢 Gestión de Patrocinadores / Sponsors</h2>
-                    <p class="text-xs text-gray-500">Control de aportes comerciales y auspiciantes del club</p>
+                    <p class="text-xs text-gray-500">Control de aportes comerciales del club</p>
                 </div>
                 <button onclick="abrirModalSponsor()" class="bg-purple-800 hover:bg-purple-900 text-white font-bold py-2 px-3 rounded-lg shadow text-xs">+ Agregar Sponsor</button>
             </div>
@@ -160,6 +182,27 @@
             </table>
         </div>
 
+    </div>
+
+    <!-- MODAL REGISTRAR PAGO -->
+    <div id="modalPago" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-40">
+        <div class="bg-white rounded-xl p-6 w-full max-w-sm space-y-4">
+            <h3 class="text-lg font-bold text-gray-800">Registrar Pago de Cuota</h3>
+            <p id="infoPagoJugador" class="text-xs font-semibold text-blue-900"></p>
+            <div>
+                <label class="text-xs font-bold text-gray-600 block mb-1">Método de Pago:</label>
+                <select id="metodoPagoSelect" class="w-full border p-2 rounded-lg text-sm">
+                    <option value="Transferencia">Transferencia Bancaria</option>
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Mercado Pago">Mercado Pago</option>
+                    <option value="Débito">Débito</option>
+                </select>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="cerrarModalPago()" class="px-4 py-2 border rounded-lg text-xs">Cancelar</button>
+                <button onclick="confirmarPago()" class="px-4 py-2 bg-green-600 text-white font-bold rounded-lg text-xs">Confirmar Pago</button>
+            </div>
+        </div>
     </div>
 
     <!-- MODAL NUEVO JUGADOR -->
@@ -221,13 +264,17 @@
 
     <!-- SCRIPT DE LÓGICA -->
     <script>
-        const PIN_CORRECTO = "1234"; // <-- PUEDES CAMBIAR TU PIN AQUÍ
+        const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        const PIN_CORRECTO = "1234"; // <-- CAMBIA TU PIN AQUÍ
+        
         let jugadores = JSON.parse(localStorage.getItem('kamuk_jugadores')) || [];
         let sponsors = JSON.parse(localStorage.getItem('kamuk_sponsors')) || [];
-        let pagos = JSON.parse(localStorage.getItem('kamuk_pagos')) || {};
+        let becas = JSON.parse(localStorage.getItem('kamuk_becas')) || {}; // id: %_descuento
+        let pagos = JSON.parse(localStorage.getItem('kamuk_pagos')) || {}; // clave: { pagado: true, metodo: "Efectivo", fecha: "..." }
         let pagosSponsors = JSON.parse(localStorage.getItem('kamuk_pagos_sponsors')) || {};
         let montoCuota = localStorage.getItem('kamuk_monto_cuota') || 15000;
         let pestanaActual = 'general';
+        let jugadorSeleccionadoPago = null;
 
         document.getElementById('valorCuota').value = montoCuota;
 
@@ -251,6 +298,7 @@
         function guardarDatos() {
             localStorage.setItem('kamuk_jugadores', JSON.stringify(jugadores));
             localStorage.setItem('kamuk_sponsors', JSON.stringify(sponsors));
+            localStorage.setItem('kamuk_becas', JSON.stringify(becas));
             localStorage.setItem('kamuk_pagos', JSON.stringify(pagos));
             localStorage.setItem('kamuk_pagos_sponsors', JSON.stringify(pagosSponsors));
         }
@@ -271,11 +319,11 @@
         function cambiarPestana(p) {
             pestanaActual = p;
             document.getElementById('vistaGeneral').classList.toggle('hidden', p !== 'general');
+            document.getElementById('vistaBecas').classList.toggle('hidden', p !== 'becas');
             document.getElementById('vistaAvisos').classList.toggle('hidden', p !== 'avisos');
             document.getElementById('vistaSponsors').classList.toggle('hidden', p !== 'sponsors');
             document.getElementById('boxFiltroCategoria').classList.toggle('hidden', p === 'sponsors');
             
-            // Ajuste del botón superior según la pestaña
             const btnMain = document.getElementById('btnNuevoMain');
             if (p === 'sponsors') {
                 btnMain.className = "bg-purple-800 hover:bg-purple-900 text-white font-bold py-2 px-3 rounded-lg shadow text-sm";
@@ -327,10 +375,49 @@
             renderizar();
         }
 
-        function registrarPago(idJugador) {
+        function obtenerMontoFinal(idJugador) {
+            const desc = Number(becas[idJugador]) || 0;
+            const base = Number(montoCuota) || 0;
+            return base - (base * (desc / 100));
+        }
+
+        function cambiarBeca(idJugador, porcentaje) {
+            becas[idJugador] = Number(porcentaje);
+            guardarDatos();
+            renderizar();
+        }
+
+        function abrirModalPago(idJugador) {
+            const j = jugadores.find(item => item.id === idJugador);
+            const mes = document.getElementById('filtroMes').value;
+            const monto = obtenerMontoFinal(idJugador);
+
+            jugadorSeleccionadoPago = j;
+            document.getElementById('infoPagoJugador').innerText = `${j.nombre} (${j.categoria}) - Mes: ${mes} - Total: $${monto.toLocaleString()}`;
+            document.getElementById('modalPago').classList.remove('hidden');
+        }
+
+        function cerrarModalPago() {
+            document.getElementById('modalPago').classList.add('hidden');
+            jugadorSeleccionadoPago = null;
+        }
+
+        function confirmarPago() {
+            if (!jugadorSeleccionadoPago) return;
+            const mes = document.getElementById('filtroMes').value;
+            const metodo = document.getElementById('metodoPagoSelect').value;
+            const clave = `${jugadorSeleccionadoPago.id}_${mes}`;
+
+            pagos[clave] = { pagado: true, metodo, fecha: new Date().toLocaleDateString() };
+            guardarDatos();
+            cerrarModalPago();
+            renderizar();
+        }
+
+        function desmarcarPago(idJugador) {
             const mes = document.getElementById('filtroMes').value;
             const clave = `${idJugador}_${mes}`;
-            pagos[clave] = !pagos[clave];
+            delete pagos[clave];
             guardarDatos();
             renderizar();
         }
@@ -341,6 +428,30 @@
             pagosSponsors[clave] = !pagosSponsors[clave];
             guardarDatos();
             renderizar();
+        }
+
+        function enviarReciboWhatsApp(idJugador) {
+            const j = jugadores.find(item => item.id === idJugador);
+            const mes = document.getElementById('filtroMes').value;
+            const clave = `${idJugador}_${mes}`;
+            const infoPago = pagos[clave];
+            const monto = obtenerMontoFinal(idJugador);
+            const nroRecibo = Math.floor(1000 + Math.random() * 9000);
+
+            const texto = `🧾 *RECIBO DE PAGO - CLUB DEPORTIVO KAMUK*\n` +
+                          `-----------------------------------\n` +
+                          `*Comprobante N°:* #${nroRecibo}\n` +
+                          `*Jugador/a:* ${j.nombre}\n` +
+                          `*Categoría:* ${j.categoria}\n` +
+                          `*Concepto:* Cuota Social - ${mes}\n` +
+                          `*Monto Abonado:* $${monto.toLocaleString()}\n` +
+                          `*Medio de Pago:* ${infoPago ? infoPago.metodo : 'Registrado'}\n` +
+                          `*Fecha:* ${infoPago ? infoPago.fecha : new Date().toLocaleDateString()}\n` +
+                          `-----------------------------------\n` +
+                          `¡Muchas gracias por su compromiso con la institución! ⚽🏻`;
+
+            let num = (j.tel || '').replace(/[^0-9]/g, '');
+            window.open(`https://wa.me/${num}?text=${encodeURIComponent(texto)}`, '_blank');
         }
 
         function enviarAvisoWhatsApp(nombre, categoria, tel) {
@@ -357,9 +468,18 @@
             window.open(`https://wa.me/${num}?text=${mensaje}`, '_blank');
         }
 
+        function contarMesesDeudaAnual(idJugador) {
+            let mesesDeuda = 0;
+            MESES.forEach(m => {
+                if (!pagos[`${idJugador}_${m}`]) mesesDeuda++;
+            });
+            return mesesDeuda;
+        }
+
         function eliminarJugador(id) {
             if (confirm("¿Estás seguro de eliminar este jugador?")) {
                 jugadores = jugadores.filter(j => j.id !== id);
+                delete becas[id];
                 guardarDatos();
                 renderizar();
             }
@@ -379,10 +499,12 @@
             const busqueda = document.getElementById('inputBuscar').value.toLowerCase();
             
             const lista = document.getElementById('listaJugadores');
+            const listaBecas = document.getElementById('listaBecas');
             const listaAvisos = document.getElementById('listaAvisos');
             const listaSponsors = document.getElementById('listaSponsors');
             
             lista.innerHTML = '';
+            listaBecas.innerHTML = '';
             listaAvisos.innerHTML = '';
             listaSponsors.innerHTML = '';
 
@@ -390,7 +512,6 @@
             let pendientesCount = 0;
 
             if (pestanaActual === 'sponsors') {
-                // RENDER VISTA SPONSORS
                 const sponsorsFiltrados = sponsors.filter(s => 
                     s.nombre.toLowerCase().includes(busqueda) || 
                     (s.contacto && s.contacto.toLowerCase().includes(busqueda))
@@ -425,45 +546,80 @@
                 });
 
             } else {
-                // RENDER VISTA JUGADORES
                 const filtrados = jugadores.filter(j => 
                     (catFiltro === 'TODAS' || j.categoria === catFiltro) &&
                     (j.nombre.toLowerCase().includes(busqueda) || (j.tutor && j.tutor.toLowerCase().includes(busqueda)))
                 );
 
-                const valor = Number(montoCuota) || 0;
-
                 filtrados.forEach(j => {
                     const clavePago = `${j.id}_${mesFiltro}`;
-                    const estaPagado = pagos[clavePago];
+                    const infoPago = pagos[clavePago];
+                    const estaPagado = infoPago && infoPago.pagado;
+                    const montoFinal = obtenerMontoFinal(j.id);
+                    const desc = Number(becas[j.id]) || 0;
+                    const mesesDeuda = contarMesesDeudaAnual(j.id);
 
-                    if (estaPagado) pagadosCount += valor; else pendientesCount += valor;
+                    if (estaPagado) pagadosCount += montoFinal; else pendientesCount += montoFinal;
 
+                    // 1. RENDER LISTA JUGADORES
                     const fila = document.createElement('tr');
                     fila.className = "hover:bg-gray-50";
                     fila.innerHTML = `
                         <td class="p-3 font-semibold text-gray-800">${j.nombre}</td>
                         <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">${j.categoria}</span></td>
                         <td class="p-3 text-gray-600">${j.tutor || '-'} <br> <span class="text-xs text-gray-400">${j.tel || ''}</span></td>
+                        <td class="p-3 font-bold text-gray-800">$${montoFinal.toLocaleString()} ${desc > 0 ? `<span class="text-xs text-amber-600">(-${desc}%)</span>` : ''}</td>
                         <td class="p-3">
                             ${estaPagado 
-                                ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">✓ Pagado</span>`
+                                ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">✓ Pagado (${infoPago.metodo || ''})</span>`
                                 : `<span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">✕ Pendiente</span>`
                             }
                         </td>
+                        <td class="p-3 text-center">
+                            ${mesesDeuda >= 2 
+                                ? `<span class="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">⚠️ ${mesesDeuda} meses</span>`
+                                : `<span class="text-xs text-gray-500">${mesesDeuda} mes(es)</span>`
+                            }
+                        </td>
                         <td class="p-3 text-center space-x-1">
-                            <button onclick="registrarPago(${j.id})" class="px-3 py-1 text-xs rounded text-white ${estaPagado ? 'bg-orange-500' : 'bg-green-600'}">${estaPagado ? 'Marcar Pendiente' : 'Registrar Pago'}</button>
+                            ${estaPagado 
+                                ? `<button onclick="desmarcarPago(${j.id})" class="px-2 py-1 text-xs rounded bg-orange-500 text-white">Anular</button>
+                                   <button onclick="enviarReciboWhatsApp(${j.id})" class="px-2 py-1 text-xs rounded bg-green-600 text-white font-bold">🧾 Recibo</button>`
+                                : `<button onclick="abrirModalPago(${j.id})" class="px-3 py-1 text-xs rounded bg-green-600 text-white font-bold">Cobrar</button>`
+                            }
                             <button onclick="eliminarJugador(${j.id})" class="px-2 py-1 text-xs bg-gray-200 text-red-600 rounded">✕</button>
                         </td>
                     `;
                     lista.appendChild(fila);
 
+                    // 2. RENDER VISTA BECAS
+                    const filaBeca = document.createElement('tr');
+                    filaBeca.innerHTML = `
+                        <td class="p-3 font-semibold text-gray-800">${j.nombre}</td>
+                        <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">${j.categoria}</span></td>
+                        <td class="p-3 text-gray-600">${j.tutor || '-'}</td>
+                        <td class="p-3">
+                            <select onchange="cambiarBeca(${j.id}, this.value)" class="border rounded p-1 text-xs bg-amber-50 font-bold">
+                                <option value="0" ${desc === 0 ? 'selected' : ''}>Sin Descuento (0%)</option>
+                                <option value="10" ${desc === 10 ? 'selected' : ''}>10% Descuento</option>
+                                <option value="20" ${desc === 20 ? 'selected' : ''}>20% Descuento (Hermanos)</option>
+                                <option value="30" ${desc === 30 ? 'selected' : ''}>30% Descuento</option>
+                                <option value="50" ${desc === 50 ? 'selected' : ''}>50% Media Beca</option>
+                                <option value="100" ${desc === 100 ? 'selected' : ''}>100% Beca Total</option>
+                            </select>
+                        </td>
+                        <td class="p-3 font-bold text-gray-800">$${montoFinal.toLocaleString()}</td>
+                    `;
+                    listaBecas.appendChild(filaBeca);
+
+                    // 3. RENDER AVISOS
                     if (!estaPagado) {
                         const filaAviso = document.createElement('tr');
                         filaAviso.innerHTML = `
                             <td class="p-3 font-semibold text-gray-800">${j.nombre}</td>
                             <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">${j.categoria}</span></td>
                             <td class="p-3 text-gray-600">${j.tutor || '-'} (${j.tel || ''})</td>
+                            <td class="p-3 text-center font-bold text-red-600">${mesesDeuda} mes(es) adeudado(s)</td>
                             <td class="p-3 text-center"><button onclick="enviarAvisoWhatsApp('${j.nombre}', '${j.categoria}', '${j.tel}')" class="px-3 py-1 text-xs bg-green-600 text-white font-bold rounded-lg">📲 Recordatorio</button></td>
                         `;
                         listaAvisos.appendChild(filaAviso);
@@ -471,7 +627,6 @@
                 });
             }
 
-            // Actualizar Totales Financieros
             document.getElementById('totalRecaudado').innerText = `$${pagadosCount.toLocaleString()}`;
             document.getElementById('totalPendiente').innerText = `$${pendientesCount.toLocaleString()}`;
         }
@@ -487,10 +642,14 @@
                     csv += `"${s.nombre}","${s.ubicacion || ''}","${s.contacto || ''}","${s.tel || ''}","${s.monto}","${estado}"\n`;
                 });
             } else {
-                csv = "Jugador,Categoria,Tutor,Telefono,Estado (" + mes + ")\n";
+                csv = "Jugador,Categoria,Tutor,Telefono,Descuento,ValorFinal,Estado (" + mes + "),MetodoPago\n";
                 jugadores.forEach(j => {
-                    const estado = pagos[`${j.id}_${mes}`] ? "Pagado" : "Pendiente";
-                    csv += `"${j.nombre}","${j.categoria}","${j.tutor || ''}","${j.tel || ''}","${estado}"\n`;
+                    const info = pagos[`${j.id}_${mes}`];
+                    const estado = info && info.pagado ? "Pagado" : "Pendiente";
+                    const metodo = info ? info.metodo : "";
+                    const desc = becas[j.id] || 0;
+                    const valor = obtenerMontoFinal(j.id);
+                    csv += `"${j.nombre}","${j.categoria}","${j.tutor || ''}","${j.tel || ''}","${desc}%","${valor}","${estado}","${metodo}"\n`;
                 });
             }
 
@@ -503,7 +662,7 @@
         }
 
         function exportarBackup() {
-            const data = { jugadores, sponsors, pagos, pagosSponsors, montoCuota };
+            const data = { jugadores, sponsors, becas, pagos, pagosSponsors, montoCuota };
             const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -521,6 +680,7 @@
                     const data = JSON.parse(e.target.result);
                     if (data.jugadores) jugadores = data.jugadores;
                     if (data.sponsors) sponsors = data.sponsors;
+                    if (data.becas) becas = data.becas;
                     if (data.pagos) pagos = data.pagos;
                     if (data.pagosSponsors) pagosSponsors = data.pagosSponsors;
                     if (data.montoCuota) montoCuota = data.montoCuota;
