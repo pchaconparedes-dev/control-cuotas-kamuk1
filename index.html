@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -20,6 +20,16 @@
                 + Nuevo Jugador
             </button>
         </header>
+
+        <!-- SOLAPAS / PESTAÑAS DE NAVEGACIÓN -->
+        <div class="flex border-b border-gray-300 gap-2">
+            <button id="tabGeneral" onclick="cambiarPestana('general')" class="py-2 px-4 font-bold border-b-2 border-blue-900 text-blue-900 bg-white rounded-t-lg shadow-sm">
+                📋 Lista de Jugadores
+            </button>
+            <button id="tabAvisos" onclick="cambiarPestana('avisos')" class="py-2 px-4 font-bold border-b-2 border-transparent text-gray-500 hover:text-blue-900 rounded-t-lg">
+                📲 Avisos Pendientes
+            </button>
+        </div>
 
         <!-- FILTROS Y CONTROLES -->
         <div class="bg-white p-4 rounded-xl shadow-sm flex flex-wrap gap-4 items-center justify-between">
@@ -56,8 +66,8 @@
             </div>
         </div>
 
-        <!-- TABLA DE JUGADORES -->
-        <div class="bg-white rounded-xl shadow-sm overflow-x-auto">
+        <!-- VISTA 1: TABLA GENERAL DE JUGADORES -->
+        <div id="vistaGeneral" class="bg-white rounded-xl shadow-sm overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-gray-200 text-gray-700 text-sm">
@@ -70,6 +80,28 @@
                 </thead>
                 <tbody id="listaJugadores" class="divide-y divide-gray-100 text-sm">
                     <!-- Carga dinámica -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- VISTA 2: PESTAÑA DE AVISOS DE CUOTA IMPAGA -->
+        <div id="vistaAvisos" class="bg-white rounded-xl shadow-sm overflow-x-auto hidden p-4">
+            <h2 class="text-lg font-bold text-red-700 mb-3 flex items-center gap-2">
+                ⚠️ Recordatorios de Cuotas Pendientes
+            </h2>
+            <p class="text-xs text-gray-500 mb-4">Esta lista muestra únicamente los jugadores que no han abonado el mes seleccionado.</p>
+            
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-red-50 text-red-800 text-sm">
+                        <th class="p-3">Jugador</th>
+                        <th class="p-3">Categoría</th>
+                        <th class="p-3">Tutor / Teléfono</th>
+                        <th class="p-3 text-center">Acción WhatsApp</th>
+                    </tr>
+                </thead>
+                <tbody id="listaAvisos" class="divide-y divide-gray-100 text-sm">
+                    <!-- Carga dinámica de pendientes -->
                 </tbody>
             </table>
         </div>
@@ -104,6 +136,7 @@
     <script>
         let jugadores = JSON.parse(localStorage.getItem('kamuk_jugadores')) || [];
         let pagos = JSON.parse(localStorage.getItem('kamuk_pagos')) || {};
+        let pestanaActual = 'general';
 
         function guardarDatos() {
             localStorage.setItem('kamuk_jugadores', JSON.stringify(jugadores));
@@ -112,6 +145,27 @@
 
         function abrirModalJugador() { document.getElementById('modalJugador').classList.remove('hidden'); }
         function cerrarModalJugador() { document.getElementById('modalJugador').classList.add('hidden'); }
+
+        function cambiarPestana(pestana) {
+            pestanaActual = pestana;
+            const tabG = document.getElementById('tabGeneral');
+            const tabA = document.getElementById('tabAvisos');
+            const vG = document.getElementById('vistaGeneral');
+            const vA = document.getElementById('vistaAvisos');
+
+            if (pestana === 'general') {
+                tabG.className = "py-2 px-4 font-bold border-b-2 border-blue-900 text-blue-900 bg-white rounded-t-lg shadow-sm";
+                tabA.className = "py-2 px-4 font-bold border-b-2 border-transparent text-gray-500 hover:text-blue-900 rounded-t-lg";
+                vG.classList.remove('hidden');
+                vA.classList.add('hidden');
+            } else {
+                tabA.className = "py-2 px-4 font-bold border-b-2 border-red-700 text-red-700 bg-white rounded-t-lg shadow-sm";
+                tabG.className = "py-2 px-4 font-bold border-b-2 border-transparent text-gray-500 hover:text-blue-900 rounded-t-lg";
+                vA.classList.remove('hidden');
+                vG.classList.add('hidden');
+            }
+            renderizar();
+        }
 
         function guardarJugador() {
             const nombre = document.getElementById('nombreJugador').value.trim();
@@ -144,7 +198,7 @@
 
         function enviarAvisoWhatsApp(nombre, categoria, tel) {
             const mes = document.getElementById('filtroMes').value;
-            const mensaje = encodeURIComponent(`Hola! Te escribimos de Club Deportivo Kamuk para recordarte que se encuentra pendiente la cuota de ${mes} para ${nombre} (${categoria}). Saludos!`);
+            const mensaje = encodeURIComponent(`Hola! Te escribimos desde el Club Deportivo Kamuk para recordarte que se encuentra pendiente el pago de la cuota correspondiente al mes de ${mes} para ${nombre} (${categoria}). Muchas gracias!`);
             
             let numLimpio = tel.replace(/[^0-9]/g, '');
             if(numLimpio) {
@@ -165,43 +219,68 @@
         function renderizar() {
             const catFiltro = document.getElementById('filtroCategoria').value;
             const mesFiltro = document.getElementById('filtroMes').value;
+            
             const lista = document.getElementById('listaJugadores');
+            const listaAvisos = document.getElementById('listaAvisos');
             
             lista.innerHTML = '';
+            listaAvisos.innerHTML = '';
 
             const filtrados = jugadores.filter(j => catFiltro === 'TODAS' || j.categoria === catFiltro);
 
+            // RENDER VISTA GENERAL
             if (filtrados.length === 0) {
                 lista.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">No hay jugadores registrados en esta categoría.</td></tr>`;
-                return;
+            } else {
+                filtrados.forEach(j => {
+                    const clavePago = `${j.id}_${mesFiltro}`;
+                    const estaPagado = pagos[clavePago];
+
+                    const fila = document.createElement('tr');
+                    fila.className = "hover:bg-gray-50";
+                    fila.innerHTML = `
+                        <td class="p-3 font-semibold text-gray-800">${j.nombre}</td>
+                        <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">${j.categoria}</span></td>
+                        <td class="p-3 text-gray-600">${j.tutor || '-'} <br> <span class="text-xs text-gray-400">${j.tel || ''}</span></td>
+                        <td class="p-3">
+                            ${estaPagado 
+                                ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">✓ Pagado (${mesFiltro})</span>`
+                                : `<span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">✕ Pendiente</span>`
+                            }
+                        </td>
+                        <td class="p-3 text-center space-x-1">
+                            <button onclick="registrarPago(${j.id})" class="px-3 py-1 text-xs rounded text-white ${estaPagado ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-600 hover:bg-green-700'}">
+                                ${estaPagado ? 'Marcar Pendiente' : 'Registrar Pago'}
+                            </button>
+                            <button onclick="eliminarJugador(${j.id})" class="px-2 py-1 text-xs bg-gray-200 text-red-600 rounded hover:bg-red-100">✕</button>
+                        </td>
+                    `;
+                    lista.appendChild(fila);
+                });
             }
 
-            filtrados.forEach(j => {
-                const clavePago = `${j.id}_${mesFiltro}`;
-                const estaPagado = pagos[clavePago];
+            // RENDER VISTA AVISOS PENDIENTES
+            const deudores = filtrados.filter(j => !pagos[`${j.id}_${mesFiltro}`]);
 
-                const fila = document.createElement('tr');
-                fila.className = "hover:bg-gray-50";
-                fila.innerHTML = `
-                    <td class="p-3 font-semibold text-gray-800">${j.nombre}</td>
-                    <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">${j.categoria}</span></td>
-                    <td class="p-3 text-gray-600">${j.tutor || '-'} <br> <span class="text-xs text-gray-400">${j.tel || ''}</span></td>
-                    <td class="p-3">
-                        ${estaPagado 
-                            ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">✓ Pagado (${mesFiltro})</span>`
-                            : `<span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">✕ Pendiente</span>`
-                        }
-                    </td>
-                    <td class="p-3 text-center space-x-1">
-                        <button onclick="registrarPago(${j.id})" class="px-3 py-1 text-xs rounded text-white ${estaPagado ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-600 hover:bg-green-700'}">
-                            ${estaPagado ? 'Marcar Pendiente' : 'Registrar Pago'}
-                        </button>
-                        ${!estaPagado ? `<button onclick="enviarAvisoWhatsApp('${j.nombre}', '${j.categoria}', '${j.tel}')" class="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600" title="Enviar recordatorio por WhatsApp">📲 Aviso</button>` : ''}
-                        <button onclick="eliminarJugador(${j.id})" class="px-2 py-1 text-xs bg-gray-200 text-red-600 rounded hover:bg-red-100">✕</button>
-                    </td>
-                `;
-                lista.appendChild(fila);
-            });
+            if (deudores.length === 0) {
+                listaAvisos.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-green-600 font-bold">🎉 ¡Excelente! No hay cuotas pendientes para esta categoría en ${mesFiltro}.</td></tr>`;
+            } else {
+                deudores.forEach(j => {
+                    const fila = document.createElement('tr');
+                    fila.className = "hover:bg-red-50";
+                    fila.innerHTML = `
+                        <td class="p-3 font-semibold text-gray-800">${j.nombre}</td>
+                        <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">${j.categoria}</span></td>
+                        <td class="p-3 text-gray-600">${j.tutor || '-'} <br> <span class="text-xs text-gray-400">${j.tel || ''}</span></td>
+                        <td class="p-3 text-center">
+                            <button onclick="enviarAvisoWhatsApp('${j.nombre}', '${j.categoria}', '${j.tel}')" class="px-3 py-1 text-xs bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 flex items-center justify-center gap-1 mx-auto shadow-sm">
+                                📲 Enviar Recordatorio
+                            </button>
+                        </td>
+                    `;
+                    listaAvisos.appendChild(fila);
+                });
+            }
         }
 
         renderizar();
