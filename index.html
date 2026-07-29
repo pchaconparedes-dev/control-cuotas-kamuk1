@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Cuotas - Club Deportivo Kamuk</title>
+    <title>Control de Cuotas y Sponsors - Club Deportivo Kamuk</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen p-4 font-sans">
@@ -12,7 +12,7 @@
     <div id="pantallaLogin" class="fixed inset-0 bg-blue-950 flex items-center justify-center p-4 z-50">
         <div class="bg-white p-6 rounded-2xl shadow-xl max-w-sm w-full text-center space-y-4">
             <h2 class="text-2xl font-bold text-blue-900">Club Deportivo Kamuk</h2>
-            <p class="text-gray-600 text-sm">Ingresa el PIN para acceder al control de cuotas</p>
+            <p class="text-gray-600 text-sm">Ingresa el PIN para acceder al sistema</p>
             <input type="password" id="inputPin" placeholder="PIN de acceso" class="w-full text-center text-xl border-2 border-gray-300 p-2 rounded-xl focus:border-blue-900 outline-none">
             <button onclick="verificarPin()" class="w-full bg-blue-900 text-white font-bold py-2 rounded-xl hover:bg-blue-800 transition">Ingresar</button>
             <p id="msgErrorPin" class="text-red-600 text-xs hidden">PIN incorrecto. Intenta de nuevo.</p>
@@ -26,10 +26,10 @@
         <header class="bg-blue-900 text-white p-6 rounded-xl shadow-md flex justify-between items-center flex-wrap gap-4">
             <div>
                 <h1 class="text-2xl font-bold">Club Deportivo Kamuk</h1>
-                <p class="text-blue-200 text-sm">Gestión Integral de Cuotas e Ingresos</p>
+                <p class="text-blue-200 text-sm">Gestión de Cuotas y Patrocinadores</p>
             </div>
             <div class="flex gap-2 flex-wrap">
-                <button onclick="abrirModalJugador()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">+ Nuevo Jugador</button>
+                <button id="btnNuevoMain" onclick="abrirModalJugador()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">+ Nuevo Jugador</button>
                 <button onclick="exportarExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">📥 Excel</button>
                 <button onclick="abrirModalBackup()" class="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">⚙️ Backup</button>
                 <button onclick="bloquearApp()" class="bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">🔒 Salir</button>
@@ -39,7 +39,7 @@
         <!-- TARJETAS DE RESUMEN FINANCIERO -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-900">
-                <span class="text-xs text-gray-500 font-bold uppercase">Valor Cuota Mensual</span>
+                <span class="text-xs text-gray-500 font-bold uppercase">Valor Cuota Jugador</span>
                 <div class="flex items-center gap-2 mt-1">
                     <span class="text-lg font-bold text-gray-800">$</span>
                     <input type="number" id="valorCuota" value="15000" onchange="guardarMontoCuota()" class="font-bold text-lg text-gray-800 border-b border-gray-300 w-28 focus:outline-none focus:border-blue-900">
@@ -56,15 +56,16 @@
         </div>
 
         <!-- PESTAÑAS DE NAVEGACIÓN -->
-        <div class="flex border-b border-gray-300 gap-2">
+        <div class="flex border-b border-gray-300 gap-2 flex-wrap">
             <button id="tabGeneral" onclick="cambiarPestana('general')" class="py-2 px-4 font-bold border-b-2 border-blue-900 text-blue-900 bg-white rounded-t-lg shadow-sm">📋 Lista de Jugadores</button>
             <button id="tabAvisos" onclick="cambiarPestana('avisos')" class="py-2 px-4 font-bold border-b-2 border-transparent text-gray-500 hover:text-blue-900 rounded-t-lg">📲 Avisos Pendientes</button>
+            <button id="tabSponsors" onclick="cambiarPestana('sponsors')" class="py-2 px-4 font-bold border-b-2 border-transparent text-purple-700 hover:text-purple-900 rounded-t-lg">🏢 Sponsors / Patrocinadores</button>
         </div>
 
         <!-- FILTROS Y BUSCADOR -->
-        <div class="bg-white p-4 rounded-xl shadow-sm flex flex-wrap gap-4 items-center justify-between">
+        <div id="panelFiltros" class="bg-white p-4 rounded-xl shadow-sm flex flex-wrap gap-4 items-center justify-between">
             <div class="flex gap-2 items-center flex-wrap">
-                <div>
+                <div id="boxFiltroCategoria">
                     <label class="font-semibold text-xs text-gray-500 block">Categoría:</label>
                     <select id="filtroCategoria" onchange="renderizar()" class="border rounded-lg p-2 bg-gray-50 text-sm">
                         <option value="TODAS">Todas</option>
@@ -79,7 +80,7 @@
                     </select>
                 </div>
                 <div>
-                    <label class="font-semibold text-xs text-gray-500 block">Mes:</label>
+                    <label class="font-semibold text-xs text-gray-500 block">Mes / Período:</label>
                     <select id="filtroMes" onchange="renderizar()" class="border rounded-lg p-2 bg-gray-50 text-sm">
                         <option value="Enero">Enero</option>
                         <option value="Febrero">Febrero</option>
@@ -97,12 +98,12 @@
                 </div>
             </div>
             <div class="w-full md:w-auto">
-                <label class="font-semibold text-xs text-gray-500 block">Buscar por Nombre:</label>
-                <input type="text" id="inputBuscar" oninput="renderizar()" placeholder="Buscar jugador..." class="border rounded-lg p-2 bg-gray-50 text-sm w-full md:w-64">
+                <label class="font-semibold text-xs text-gray-500 block">Buscar:</label>
+                <input type="text" id="inputBuscar" oninput="renderizar()" placeholder="Buscar..." class="border rounded-lg p-2 bg-gray-50 text-sm w-full md:w-64">
             </div>
         </div>
 
-        <!-- VISTA GENERAL -->
+        <!-- VISTA GENERAL JUGADORES -->
         <div id="vistaGeneral" class="bg-white rounded-xl shadow-sm overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
@@ -134,6 +135,31 @@
             </table>
         </div>
 
+        <!-- VISTA SPONSORS -->
+        <div id="vistaSponsors" class="bg-white rounded-xl shadow-sm overflow-x-auto hidden p-4">
+            <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+                <div>
+                    <h2 class="text-lg font-bold text-purple-900">🏢 Gestión de Patrocinadores / Sponsors</h2>
+                    <p class="text-xs text-gray-500">Control de aportes comerciales y auspiciantes del club</p>
+                </div>
+                <button onclick="abrirModalSponsor()" class="bg-purple-800 hover:bg-purple-900 text-white font-bold py-2 px-3 rounded-lg shadow text-xs">+ Agregar Sponsor</button>
+            </div>
+
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-purple-50 text-purple-900 text-sm">
+                        <th class="p-3">Empresa / Comercio</th>
+                        <th class="p-3">Ubicación / Espacio</th>
+                        <th class="p-3">Contacto / Teléfono</th>
+                        <th class="p-3">Monto Aporte</th>
+                        <th class="p-3">Estado Período</th>
+                        <th class="p-3 text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="listaSponsors" class="divide-y divide-gray-100 text-sm"></tbody>
+            </table>
+        </div>
+
     </div>
 
     <!-- MODAL NUEVO JUGADOR -->
@@ -160,11 +186,26 @@
         </div>
     </div>
 
+    <!-- MODAL NUEVO SPONSOR -->
+    <div id="modalSponsor" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-40">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
+            <h3 class="text-lg font-bold text-purple-900">Agregar Nuevo Sponsor</h3>
+            <input type="text" id="nombreSponsor" placeholder="Nombre de la Empresa / Comercio" class="w-full border p-2 rounded-lg">
+            <input type="text" id="ubicacionSponsor" placeholder="Ubicación (Ej: Camiseta C11, Banner)" class="w-full border p-2 rounded-lg">
+            <input type="text" id="contactoSponsor" placeholder="Nombre de Contacto" class="w-full border p-2 rounded-lg">
+            <input type="tel" id="telSponsor" placeholder="Teléfono de Contacto" class="w-full border p-2 rounded-lg">
+            <input type="number" id="montoSponsor" placeholder="Monto Acordado ($)" class="w-full border p-2 rounded-lg">
+            <div class="flex justify-end gap-2">
+                <button onclick="cerrarModalSponsor()" class="px-4 py-2 border rounded-lg">Cancelar</button>
+                <button onclick="guardarSponsor()" class="px-4 py-2 bg-purple-900 text-white rounded-lg">Guardar Sponsor</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL BACKUP -->
     <div id="modalBackup" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-40">
         <div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
             <h3 class="text-lg font-bold text-gray-800">Copia de Seguridad (Backup)</h3>
-            <p class="text-xs text-gray-600">Exporta una copia de tus datos o impórtala en otro dispositivo.</p>
             <button onclick="exportarBackup()" class="w-full bg-blue-900 text-white font-bold py-2 rounded-lg">💾 Descargar Backup de Datos</button>
             <hr>
             <div>
@@ -180,9 +221,11 @@
 
     <!-- SCRIPT DE LÓGICA -->
     <script>
-        const PIN_CORRECTO = "Constanza26"; // <-- PUEDES CAMBIAR TU PIN AQUÍ
+        const PIN_CORRECTO = "1234"; // <-- PUEDES CAMBIAR TU PIN AQUÍ
         let jugadores = JSON.parse(localStorage.getItem('kamuk_jugadores')) || [];
+        let sponsors = JSON.parse(localStorage.getItem('kamuk_sponsors')) || [];
         let pagos = JSON.parse(localStorage.getItem('kamuk_pagos')) || {};
+        let pagosSponsors = JSON.parse(localStorage.getItem('kamuk_pagos_sponsors')) || {};
         let montoCuota = localStorage.getItem('kamuk_monto_cuota') || 15000;
         let pestanaActual = 'general';
 
@@ -207,7 +250,9 @@
 
         function guardarDatos() {
             localStorage.setItem('kamuk_jugadores', JSON.stringify(jugadores));
+            localStorage.setItem('kamuk_sponsors', JSON.stringify(sponsors));
             localStorage.setItem('kamuk_pagos', JSON.stringify(pagos));
+            localStorage.setItem('kamuk_pagos_sponsors', JSON.stringify(pagosSponsors));
         }
 
         function guardarMontoCuota() {
@@ -218,6 +263,8 @@
 
         function abrirModalJugador() { document.getElementById('modalJugador').classList.remove('hidden'); }
         function cerrarModalJugador() { document.getElementById('modalJugador').classList.add('hidden'); }
+        function abrirModalSponsor() { document.getElementById('modalSponsor').classList.remove('hidden'); }
+        function cerrarModalSponsor() { document.getElementById('modalSponsor').classList.add('hidden'); }
         function abrirModalBackup() { document.getElementById('modalBackup').classList.remove('hidden'); }
         function cerrarModalBackup() { document.getElementById('modalBackup').classList.add('hidden'); }
 
@@ -225,6 +272,21 @@
             pestanaActual = p;
             document.getElementById('vistaGeneral').classList.toggle('hidden', p !== 'general');
             document.getElementById('vistaAvisos').classList.toggle('hidden', p !== 'avisos');
+            document.getElementById('vistaSponsors').classList.toggle('hidden', p !== 'sponsors');
+            document.getElementById('boxFiltroCategoria').classList.toggle('hidden', p === 'sponsors');
+            
+            // Ajuste del botón superior según la pestaña
+            const btnMain = document.getElementById('btnNuevoMain');
+            if (p === 'sponsors') {
+                btnMain.className = "bg-purple-800 hover:bg-purple-900 text-white font-bold py-2 px-3 rounded-lg shadow text-sm";
+                btnMain.innerText = "+ Nuevo Sponsor";
+                btnMain.onclick = abrirModalSponsor;
+            } else {
+                btnMain.className = "bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded-lg shadow text-sm";
+                btnMain.innerText = "+ Nuevo Jugador";
+                btnMain.onclick = abrirModalJugador;
+            }
+
             renderizar();
         }
 
@@ -245,6 +307,26 @@
             renderizar();
         }
 
+        function guardarSponsor() {
+            const nombre = document.getElementById('nombreSponsor').value.trim();
+            const ubicacion = document.getElementById('ubicacionSponsor').value.trim();
+            const contacto = document.getElementById('contactoSponsor').value.trim();
+            const tel = document.getElementById('telSponsor').value.trim();
+            const monto = document.getElementById('montoSponsor').value;
+
+            if (!nombre) return alert("Ingresa el nombre de la empresa/sponsor");
+
+            sponsors.push({ id: Date.now(), nombre, ubicacion, contacto, tel, monto: Number(monto) || 0 });
+            guardarDatos();
+            cerrarModalSponsor();
+            document.getElementById('nombreSponsor').value = '';
+            document.getElementById('ubicacionSponsor').value = '';
+            document.getElementById('contactoSponsor').value = '';
+            document.getElementById('telSponsor').value = '';
+            document.getElementById('montoSponsor').value = '';
+            renderizar();
+        }
+
         function registrarPago(idJugador) {
             const mes = document.getElementById('filtroMes').value;
             const clave = `${idJugador}_${mes}`;
@@ -253,9 +335,24 @@
             renderizar();
         }
 
+        function registrarPagoSponsor(idSponsor) {
+            const mes = document.getElementById('filtroMes').value;
+            const clave = `${idSponsor}_${mes}`;
+            pagosSponsors[clave] = !pagosSponsors[clave];
+            guardarDatos();
+            renderizar();
+        }
+
         function enviarAvisoWhatsApp(nombre, categoria, tel) {
             const mes = document.getElementById('filtroMes').value;
             const mensaje = encodeURIComponent(`Hola! Te escribimos desde el Club Deportivo Kamuk para recordarte que se encuentra pendiente el pago de la cuota correspondiente al mes de ${mes} para ${nombre} (${categoria}). Muchas gracias!`);
+            let num = tel.replace(/[^0-9]/g, '');
+            window.open(`https://wa.me/${num}?text=${mensaje}`, '_blank');
+        }
+
+        function enviarAvisoSponsorWhatsApp(empresa, contacto, tel) {
+            const mes = document.getElementById('filtroMes').value;
+            const mensaje = encodeURIComponent(`Hola ${contacto || ''}! Te escribimos desde el Club Deportivo Kamuk para recordarte el aporte de patrocinio de ${empresa} correspondiente a ${mes}. Muchas gracias por apoyar al club!`);
             let num = tel.replace(/[^0-9]/g, '');
             window.open(`https://wa.me/${num}?text=${mensaje}`, '_blank');
         }
@@ -268,6 +365,14 @@
             }
         }
 
+        function eliminarSponsor(id) {
+            if (confirm("¿Estás seguro de eliminar este sponsor?")) {
+                sponsors = sponsors.filter(s => s.id !== id);
+                guardarDatos();
+                renderizar();
+            }
+        }
+
         function renderizar() {
             const catFiltro = document.getElementById('filtroCategoria').value;
             const mesFiltro = document.getElementById('filtroMes').value;
@@ -275,77 +380,130 @@
             
             const lista = document.getElementById('listaJugadores');
             const listaAvisos = document.getElementById('listaAvisos');
+            const listaSponsors = document.getElementById('listaSponsors');
+            
             lista.innerHTML = '';
             listaAvisos.innerHTML = '';
-
-            const filtrados = jugadores.filter(j => 
-                (catFiltro === 'TODAS' || j.categoria === catFiltro) &&
-                (j.nombre.toLowerCase().includes(busqueda) || (j.tutor && j.tutor.toLowerCase().includes(busqueda)))
-            );
+            listaSponsors.innerHTML = '';
 
             let pagadosCount = 0;
             let pendientesCount = 0;
 
-            filtrados.forEach(j => {
-                const clavePago = `${j.id}_${mesFiltro}`;
-                const estaPagado = pagos[clavePago];
+            if (pestanaActual === 'sponsors') {
+                // RENDER VISTA SPONSORS
+                const sponsorsFiltrados = sponsors.filter(s => 
+                    s.nombre.toLowerCase().includes(busqueda) || 
+                    (s.contacto && s.contacto.toLowerCase().includes(busqueda))
+                );
 
-                if (estaPagado) pagadosCount++; else pendientesCount++;
+                sponsorsFiltrados.forEach(s => {
+                    const clavePago = `${s.id}_${mesFiltro}`;
+                    const estaPagado = pagosSponsors[clavePago];
 
-                const fila = document.createElement('tr');
-                fila.className = "hover:bg-gray-50";
-                fila.innerHTML = `
-                    <td class="p-3 font-semibold text-gray-800">${j.nombre}</td>
-                    <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">${j.categoria}</span></td>
-                    <td class="p-3 text-gray-600">${j.tutor || '-'} <br> <span class="text-xs text-gray-400">${j.tel || ''}</span></td>
-                    <td class="p-3">
-                        ${estaPagado 
-                            ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">✓ Pagado</span>`
-                            : `<span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">✕ Pendiente</span>`
-                        }
-                    </td>
-                    <td class="p-3 text-center space-x-1">
-                        <button onclick="registrarPago(${j.id})" class="px-3 py-1 text-xs rounded text-white ${estaPagado ? 'bg-orange-500' : 'bg-green-600'}">${estaPagado ? 'Marcar Pendiente' : 'Registrar Pago'}</button>
-                        <button onclick="eliminarJugador(${j.id})" class="px-2 py-1 text-xs bg-gray-200 text-red-600 rounded">✕</button>
-                    </td>
-                `;
-                lista.appendChild(fila);
+                    if (estaPagado) pagadosCount += s.monto; else pendientesCount += s.monto;
 
-                if (!estaPagado) {
-                    const filaAviso = document.createElement('tr');
-                    filaAviso.innerHTML = `
+                    const fila = document.createElement('tr');
+                    fila.className = "hover:bg-purple-50";
+                    fila.innerHTML = `
+                        <td class="p-3 font-semibold text-purple-900">${s.nombre}</td>
+                        <td class="p-3 text-xs text-gray-600">${s.ubicacion || '-'}</td>
+                        <td class="p-3 text-gray-600">${s.contacto || '-'} <br> <span class="text-xs text-gray-400">${s.tel || ''}</span></td>
+                        <td class="p-3 font-bold text-gray-800">$${(s.monto || 0).toLocaleString()}</td>
+                        <td class="p-3">
+                            ${estaPagado 
+                                ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">✓ Pagado</span>`
+                                : `<span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">✕ Pendiente</span>`
+                            }
+                        </td>
+                        <td class="p-3 text-center space-x-1">
+                            <button onclick="registrarPagoSponsor(${s.id})" class="px-3 py-1 text-xs rounded text-white ${estaPagado ? 'bg-orange-500' : 'bg-purple-800'}">${estaPagado ? 'Marcar Pendiente' : 'Registrar Pago'}</button>
+                            ${!estaPagado ? `<button onclick="enviarAvisoSponsorWhatsApp('${s.nombre}', '${s.contacto}', '${s.tel}')" class="px-2 py-1 text-xs bg-green-600 text-white rounded">📲 Aviso</button>` : ''}
+                            <button onclick="eliminarSponsor(${s.id})" class="px-2 py-1 text-xs bg-gray-200 text-red-600 rounded">✕</button>
+                        </td>
+                    `;
+                    listaSponsors.appendChild(fila);
+                });
+
+            } else {
+                // RENDER VISTA JUGADORES
+                const filtrados = jugadores.filter(j => 
+                    (catFiltro === 'TODAS' || j.categoria === catFiltro) &&
+                    (j.nombre.toLowerCase().includes(busqueda) || (j.tutor && j.tutor.toLowerCase().includes(busqueda)))
+                );
+
+                const valor = Number(montoCuota) || 0;
+
+                filtrados.forEach(j => {
+                    const clavePago = `${j.id}_${mesFiltro}`;
+                    const estaPagado = pagos[clavePago];
+
+                    if (estaPagado) pagadosCount += valor; else pendientesCount += valor;
+
+                    const fila = document.createElement('tr');
+                    fila.className = "hover:bg-gray-50";
+                    fila.innerHTML = `
                         <td class="p-3 font-semibold text-gray-800">${j.nombre}</td>
                         <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">${j.categoria}</span></td>
-                        <td class="p-3 text-gray-600">${j.tutor || '-'} (${j.tel || ''})</td>
-                        <td class="p-3 text-center"><button onclick="enviarAvisoWhatsApp('${j.nombre}', '${j.categoria}', '${j.tel}')" class="px-3 py-1 text-xs bg-green-600 text-white font-bold rounded-lg">📲 Recordatorio</button></td>
+                        <td class="p-3 text-gray-600">${j.tutor || '-'} <br> <span class="text-xs text-gray-400">${j.tel || ''}</span></td>
+                        <td class="p-3">
+                            ${estaPagado 
+                                ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">✓ Pagado</span>`
+                                : `<span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">✕ Pendiente</span>`
+                            }
+                        </td>
+                        <td class="p-3 text-center space-x-1">
+                            <button onclick="registrarPago(${j.id})" class="px-3 py-1 text-xs rounded text-white ${estaPagado ? 'bg-orange-500' : 'bg-green-600'}">${estaPagado ? 'Marcar Pendiente' : 'Registrar Pago'}</button>
+                            <button onclick="eliminarJugador(${j.id})" class="px-2 py-1 text-xs bg-gray-200 text-red-600 rounded">✕</button>
+                        </td>
                     `;
-                    listaAvisos.appendChild(filaAviso);
-                }
-            });
+                    lista.appendChild(fila);
+
+                    if (!estaPagado) {
+                        const filaAviso = document.createElement('tr');
+                        filaAviso.innerHTML = `
+                            <td class="p-3 font-semibold text-gray-800">${j.nombre}</td>
+                            <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">${j.categoria}</span></td>
+                            <td class="p-3 text-gray-600">${j.tutor || '-'} (${j.tel || ''})</td>
+                            <td class="p-3 text-center"><button onclick="enviarAvisoWhatsApp('${j.nombre}', '${j.categoria}', '${j.tel}')" class="px-3 py-1 text-xs bg-green-600 text-white font-bold rounded-lg">📲 Recordatorio</button></td>
+                        `;
+                        listaAvisos.appendChild(filaAviso);
+                    }
+                });
+            }
 
             // Actualizar Totales Financieros
-            const valor = Number(montoCuota) || 0;
-            document.getElementById('totalRecaudado').innerText = `$${(pagadosCount * valor).toLocaleString()}`;
-            document.getElementById('totalPendiente').innerText = `$${(pendientesCount * valor).toLocaleString()}`;
+            document.getElementById('totalRecaudado').innerText = `$${pagadosCount.toLocaleString()}`;
+            document.getElementById('totalPendiente').innerText = `$${pendientesCount.toLocaleString()}`;
         }
 
         function exportarExcel() {
             const mes = document.getElementById('filtroMes').value;
-            let csv = "Jugador,Categoria,Tutor,Telefono,Estado (" + mes + ")\n";
-            jugadores.forEach(j => {
-                const estado = pagos[`${j.id}_${mes}`] ? "Pagado" : "Pendiente";
-                csv += `"${j.nombre}","${j.categoria}","${j.tutor || ''}","${j.tel || ''}","${estado}"\n`;
-            });
+            let csv = "";
+
+            if (pestanaActual === 'sponsors') {
+                csv = "Sponsor,Ubicacion,Contacto,Telefono,Monto,Estado (" + mes + ")\n";
+                sponsors.forEach(s => {
+                    const estado = pagosSponsors[`${s.id}_${mes}`] ? "Pagado" : "Pendiente";
+                    csv += `"${s.nombre}","${s.ubicacion || ''}","${s.contacto || ''}","${s.tel || ''}","${s.monto}","${estado}"\n`;
+                });
+            } else {
+                csv = "Jugador,Categoria,Tutor,Telefono,Estado (" + mes + ")\n";
+                jugadores.forEach(j => {
+                    const estado = pagos[`${j.id}_${mes}`] ? "Pagado" : "Pendiente";
+                    csv += `"${j.nombre}","${j.categoria}","${j.tutor || ''}","${j.tel || ''}","${estado}"\n`;
+                });
+            }
+
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.setAttribute('href', url);
-            a.setAttribute('download', `Kamuk_Cuotas_${mes}.csv`);
+            a.setAttribute('download', `Kamuk_${pestanaActual === 'sponsors' ? 'Sponsors' : 'Cuotas'}_${mes}.csv`);
             a.click();
         }
 
         function exportarBackup() {
-            const data = { jugadores, pagos, montoCuota };
+            const data = { jugadores, sponsors, pagos, pagosSponsors, montoCuota };
             const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -362,7 +520,9 @@
                 try {
                     const data = JSON.parse(e.target.result);
                     if (data.jugadores) jugadores = data.jugadores;
+                    if (data.sponsors) sponsors = data.sponsors;
                     if (data.pagos) pagos = data.pagos;
+                    if (data.pagosSponsors) pagosSponsors = data.pagosSponsors;
                     if (data.montoCuota) montoCuota = data.montoCuota;
                     guardarDatos();
                     localStorage.setItem('kamuk_monto_cuota', montoCuota);
