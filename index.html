@@ -33,6 +33,7 @@
 <p class="text-blue-200 text-sm">Gestión Integral: Cuotas, Becas, Sponsors, Gastos y Seguros</p>
 </div>
 <div class="flex gap-2 flex-wrap">
+<button onclick="deshacerUltimaAccion()" id="btnDeshacer" title="Deshacer el último cambio" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-3 rounded-lg shadow text-sm transition flex items-center gap-1">↩️ Deshacer</button>
 <button id="btnNuevoMain" onclick="abrirModalJugador()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">+ Nuevo Jugador</button>
 <button onclick="abrirModalImportarExcel()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">📊 Cargar Excel Jugadores</button>
 <button onclick="exportarTodoExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">📥 Descargar Todo (Excel)</button>
@@ -443,6 +444,9 @@ let montoCuota = localStorage.getItem('kamuk_monto_cuota') || 15000;
 let pestanaActual = 'general';
 let jugadorSeleccionadoPago = null;
 
+// VARIABLE PARA HISTORIAL DE DESHACER
+let estadoAnterior = null;
+
 document.getElementById('valorCuota').value = montoCuota;
 
 function verificarPin() {
@@ -462,6 +466,47 @@ document.getElementById('appContenido').classList.add('hidden');
 document.getElementById('inputPin').value = '';
 }
 
+// GUARDA EL ESTADO PREVIO ANTES DE CUALQUIER CAMBIO
+function respaldarEstadoActual() {
+estadoAnterior = JSON.stringify({
+jugadores,
+sponsors,
+gastos,
+becas,
+pagos,
+pagosSponsors,
+listaAseguradosExcel,
+fotosPolizas,
+montoCuota
+});
+}
+
+// FUNCIÓN PARA DESHACER LA ÚLTIMA ACCIÓN
+function deshacerUltimaAccion() {
+if (!estadoAnterior) {
+return alert("No hay cambios recientes para deshacer.");
+}
+try {
+const data = JSON.parse(estadoAnterior);
+jugadores = data.jugadores || [];
+sponsors = data.sponsors || [];
+gastos = data.gastos || [];
+becas = data.becas || {};
+pagos = data.pagos || {};
+pagosSponsors = data.pagosSponsors || {};
+listaAseguradosExcel = data.listaAseguradosExcel || [];
+fotosPolizas = data.fotosPolizas || {};
+montoCuota = data.montoCuota || 15000;
+
+guardarDatos();
+estadoAnterior = null; // Limpiar después de usar
+renderizar();
+alert("↩️ Se deshizo la última acción correctamente.");
+} catch (err) {
+alert("Error al intentar deshacer la acción.");
+}
+}
+
 function guardarDatos() {
 localStorage.setItem('kamuk_jugadores', JSON.stringify(jugadores));
 localStorage.setItem('kamuk_sponsors', JSON.stringify(sponsors));
@@ -474,6 +519,7 @@ localStorage.setItem('kamuk_fotos_polizas', JSON.stringify(fotosPolizas));
 }
 
 function guardarMontoCuota() {
+respaldarEstadoActual();
 montoCuota = document.getElementById('valorCuota').value;
 localStorage.setItem('kamuk_monto_cuota', montoCuota);
 renderizar();
@@ -521,6 +567,7 @@ renderizar();
 }
 
 function guardarJugador() {
+respaldarEstadoActual();
 const nombre = document.getElementById('nombreJugador').value.trim();
 const dni = document.getElementById('dniJugador').value.trim();
 const fechaNac = document.getElementById('fechaNacJugador').value.trim();
@@ -547,8 +594,8 @@ document.getElementById('aptoFisicoJugador').checked = false;
 renderizar();
 }
 
-// PROCESAMIENTO UNIVERSAL DE DOCUMENTOS (EXCEL, PDF, IMAGENES)
 async function procesarDocumentoSeguroUniversal() {
+respaldarEstadoActual();
 const input = document.getElementById('inputArchivoSeguroUniversal');
 const file = input.files[0];
 const catDestino = document.getElementById('catDestinoEscaner').value;
@@ -562,7 +609,6 @@ let listaNuevos = [];
 
 try {
 if (ext === 'xlsx' || ext === 'xls' || ext === 'csv') {
-// EXCEL
 const buffer = await file.arrayBuffer();
 const wb = XLSX.read(buffer, { type: 'array' });
 const sheet = wb.Sheets[wb.SheetNames[0]];
@@ -583,7 +629,6 @@ listaNuevos.push({ nombre, dni, fechaNac: fnac });
 });
 
 } else if (ext === 'pdf') {
-// PDF
 const buffer = await file.arrayBuffer();
 const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
 let textoFull = "";
@@ -597,7 +642,6 @@ textoFull += content.items.map(item => item.str).join(" ") + "\n";
 listaNuevos = parsearTextoSeguro(textoFull);
 
 } else if (['png', 'jpg', 'jpeg'].includes(ext)) {
-// IMAGEN (OCR TESSERACT)
 const res = await Tesseract.recognize(file, 'spa');
 listaNuevos = parsearTextoSeguro(res.data.text);
 }
@@ -634,7 +678,6 @@ statusElem.classList.add('hidden');
 }
 }
 
-// LÓGICA DE EXTRACCIÓN DE TEXTO (DNI, FECHAS, NOMBRES)
 function parsearTextoSeguro(texto) {
 const lineas = texto.split('\n');
 const resultados = [];
@@ -643,15 +686,12 @@ lineas.forEach(l => {
 const linea = l.trim();
 if (linea.length < 5) return;
 
-// Buscar patrón de DNI (7 u 8 dígitos)
 const matchDNI = linea.match(/\b\d{7,8}\b/);
-// Buscar patrón de fecha (DD/MM/AAAA)
 const matchFecha = linea.match(/\b\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}\b/);
 
 let dni = matchDNI ? matchDNI[0] : "";
 let fechaNac = matchFecha ? matchFecha[0] : "";
 
-// Limpiar el texto para obtener el Nombre y Apellido
 let nombreLimpio = linea.replace(/\b\d{7,8}\b/g, "").replace(/\b\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}\b/g, "").trim();
 
 if (nombreLimpio.length > 3) {
@@ -667,6 +707,7 @@ return resultados;
 }
 
 function procesarListaSeguro(e) {
+respaldarEstadoActual();
 const file = e.target.files[0];
 if (!file) return;
 
@@ -697,6 +738,7 @@ reader.readAsArrayBuffer(file);
 }
 
 function cargarFotoPoliza(idJugador, event) {
+respaldarEstadoActual();
 const file = event.target.files[0];
 if (!file) return;
 
@@ -717,6 +759,7 @@ w.document.write(`<img src="${imgData}" style="max-width:100%; height:auto;">`);
 }
 
 function procesarExcel() {
+respaldarEstadoActual();
 const fileInput = document.getElementById('archivoExcelInput');
 const file = fileInput.files[0];
 
@@ -777,6 +820,7 @@ reader.readAsArrayBuffer(file);
 }
 
 function guardarSponsor() {
+respaldarEstadoActual();
 const nombre = document.getElementById('nombreSponsor').value.trim();
 const ubicacion = document.getElementById('ubicacionSponsor').value.trim();
 const contacto = document.getElementById('contactoSponsor').value.trim();
@@ -797,6 +841,7 @@ renderizar();
 }
 
 function guardarGasto() {
+respaldarEstadoActual();
 const detalle = document.getElementById('detalleGasto').value.trim();
 const tipo = document.getElementById('tipoGastoSelect').value;
 const categoria = document.getElementById('catGastoSelect').value;
@@ -815,6 +860,7 @@ renderizar();
 
 function eliminarGasto(id) {
 if (confirm("¿Deseas eliminar este registro de gasto?")) {
+respaldarEstadoActual();
 gastos = gastos.filter(g => g.id !== id);
 guardarDatos();
 renderizar();
@@ -828,6 +874,7 @@ return base - (base * (desc / 100));
 }
 
 function cambiarBeca(idJugador, porcentaje) {
+respaldarEstadoActual();
 becas[idJugador] = Number(porcentaje);
 guardarDatos();
 renderizar();
@@ -850,6 +897,7 @@ jugadorSeleccionadoPago = null;
 
 function confirmarPago() {
 if (!jugadorSeleccionadoPago) return;
+respaldarEstadoActual();
 const mes = document.getElementById('filtroMes').value;
 const metodo = document.getElementById('metodoPagoSelect').value;
 const clave = `${jugadorSeleccionadoPago.id}_${mes}`;
@@ -861,6 +909,7 @@ renderizar();
 }
 
 function desmarcarPago(idJugador) {
+respaldarEstadoActual();
 const mes = document.getElementById('filtroMes').value;
 const clave = `${idJugador}_${mes}`;
 delete pagos[clave];
@@ -869,6 +918,7 @@ renderizar();
 }
 
 function registrarPagoSponsor(idSponsor) {
+respaldarEstadoActual();
 const mes = document.getElementById('filtroMes').value;
 const clave = `${idSponsor}_${mes}`;
 pagosSponsors[clave] = !pagosSponsors[clave];
@@ -924,6 +974,7 @@ return mesesDeuda;
 
 function eliminarJugador(id) {
 if (confirm("¿Estás seguro de eliminar este jugador?")) {
+respaldarEstadoActual();
 jugadores = jugadores.filter(j => j.id !== id);
 delete becas[id];
 guardarDatos();
@@ -933,6 +984,7 @@ renderizar();
 
 function eliminarSponsor(id) {
 if (confirm("¿Estás seguro de eliminar este sponsor?")) {
+respaldarEstadoActual();
 sponsors = sponsors.filter(s => s.id !== id);
 guardarDatos();
 renderizar();
@@ -1222,6 +1274,7 @@ a.click();
 }
 
 function importarBackup() {
+respaldarEstadoActual();
 const file = document.getElementById('archivoBackup').files[0];
 if (!file) return alert("Selecciona un archivo .json");
 const reader = new FileReader();
