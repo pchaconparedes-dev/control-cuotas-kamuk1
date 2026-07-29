@@ -30,14 +30,14 @@
 <header class="bg-blue-900 text-white p-6 rounded-xl shadow-md flex justify-between items-center flex-wrap gap-4">
 <div>
 <h1 class="text-2xl font-bold">Club Deportivo Kamuk</h1>
-<p class="text-blue-200 text-sm">Gestión Integral: Cuotas, Becas, Sponsors, Gastos, Seguros y Viajes</p>
+<p class="text-blue-200 text-sm">Gestión Integral: Cuotas, Becas, Sponsors, Gastos, Seguros y Tesorería</p>
 </div>
 <div class="flex gap-2 flex-wrap">
 <button onclick="deshacerUltimaAccion()" id="btnDeshacer" title="Deshacer el último cambio" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-3 rounded-lg shadow text-sm transition">↩️ Deshacer</button>
 <button onclick="rehacerUltimaAccion()" id="btnRehacer" title="Rehacer acción deshecha" class="bg-amber-800 hover:bg-amber-900 text-white font-bold py-2 px-3 rounded-lg shadow text-sm transition">↪️ Rehacer</button>
 <button id="btnNuevoMain" onclick="abrirModalJugador()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">+ Nuevo Jugador</button>
-<button onclick="imprimirListaBuenaFe()" class="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">🖨️ Lista de Buena Fe / PDF</button>
-<button onclick="enviarMensajeMasivoWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">📲 WhatsApp Categoria</button>
+<button onclick="imprimirListaBuenaFe()" class="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">🖨️ Lista de Buena Fe</button>
+<button onclick="exportarLibroDiarioContador()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">🏛️ Exportar Libro Diario (Contador)</button>
 <button onclick="abrirModalImportarExcel()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">📊 Cargar Excel</button>
 <button onclick="exportarTodoExcel()" class="bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">📥 Descargar Todo</button>
 <button onclick="abrirModalBackup()" class="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">⚙️ Backup</button>
@@ -81,6 +81,7 @@
 <!-- PESTAÑAS DE NAVEGACIÓN -->
 <div class="flex border-b border-gray-300 gap-2 flex-wrap">
 <button id="tabGeneral" onclick="cambiarPestana('general')" class="py-2 px-4 font-bold border-b-2 border-blue-900 text-blue-900 bg-white rounded-t-lg shadow-sm">📋 Jugadores</button>
+<button id="tabContador" onclick="cambiarPestana('contador')" class="py-2 px-4 font-bold border-b-2 border-transparent text-slate-700 hover:text-slate-900 rounded-t-lg">🏛️ Balance & Contador</button>
 <button id="tabEscanerSeguro" onclick="cambiarPestana('escanerSeguro')" class="py-2 px-4 font-bold border-b-2 border-transparent text-cyan-700 hover:text-cyan-900 rounded-t-lg">📄 Extractor de Datos (Excel/PDF/Img)</button>
 <button id="tabSeguro" onclick="cambiarPestana('seguro')" class="py-2 px-4 font-bold border-b-2 border-transparent text-teal-700 hover:text-teal-900 rounded-t-lg">🛡️ Control de Seguro</button>
 <button id="tabViajes" onclick="cambiarPestana('viajes')" class="py-2 px-4 font-bold border-b-2 border-transparent text-orange-700 hover:text-orange-900 rounded-t-lg">🚌 Delegación / Viajes</button>
@@ -151,6 +152,50 @@
 </thead>
 <tbody id="listaJugadores" class="divide-y divide-gray-100 text-sm"></tbody>
 </table>
+</div>
+
+<!-- VISTA CONTADOR Y BALANCE ANUAL -->
+<div id="vistaContador" class="bg-white rounded-xl shadow-sm p-6 space-y-6 hidden">
+<div class="bg-slate-50 border-l-4 border-slate-700 p-4 rounded-xl flex justify-between items-center flex-wrap gap-4">
+<div>
+<h2 class="text-lg font-bold text-slate-900">🏛️ Rendición Contable & Estado de Resultados</h2>
+<p class="text-xs text-slate-700">Resumen listo para descargar e ingresar al sistema del contador público o presentar a Inspección de Personas Jurídicas.</p>
+</div>
+<button onclick="exportarLibroDiarioContador()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-4 rounded-lg shadow text-xs">📥 Descargar Libro Diario (Excel/CSV)</button>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="p-4 bg-green-50 border border-green-200 rounded-xl">
+<span class="text-xs font-bold text-green-800 uppercase block">Ingresos Totales (Cuotas + Sponsors)</span>
+<span id="contIngresosTotales" class="text-2xl font-black text-green-700">$0</span>
+</div>
+<div class="p-4 bg-red-50 border border-red-200 rounded-xl">
+<span class="text-xs font-bold text-red-800 uppercase block">Egresos Totales (Gastos Operativos)</span>
+<span id="contEgresosTotales" class="text-2xl font-black text-red-700">$0</span>
+</div>
+<div class="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+<span class="text-xs font-bold text-blue-900 uppercase block">Superávit / Resultado Operativo</span>
+<span id="contResultadoOperativo" class="text-2xl font-black text-blue-900">$0</span>
+</div>
+</div>
+
+<div class="overflow-x-auto">
+<h3 class="text-sm font-bold text-gray-700 mb-2">Libro Diario Unificado del Período Selected</h3>
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-200 text-slate-800 text-xs uppercase">
+<th class="p-2.5">Fecha</th>
+<th class="p-2.5">Tipo Asiento</th>
+<th class="p-2.5">Concepto / Detalle</th>
+<th class="p-2.5">Medio / Cuenta</th>
+<th class="p-2.5">Comprobante / Factura</th>
+<th class="p-2.5 text-right">Haber (Ingreso)</th>
+<th class="p-2.5 text-right">Debe (Gasto)</th>
+</tr>
+</thead>
+<tbody id="tablaLibroDiario" class="divide-y divide-gray-200 text-xs"></tbody>
+</table>
+</div>
 </div>
 
 <!-- VISTA DELEGACIÓN / VIAJES -->
@@ -312,8 +357,9 @@ Procesando documento... Por favor espera un momento.
 <thead>
 <tr class="bg-red-50 text-red-900 text-sm">
 <th class="p-3">Concepto / Detalle</th>
-<th class="p-3">Tipo de Gasto</th>
-<th class="p-3">Categoría Asignada</th>
+<th class="p-3">Imputación / Rubro</th>
+<th class="p-3">N° Factura / Ticket</th>
+<th class="p-3">Categoría</th>
 <th class="p-3">Monto ($)</th>
 <th class="p-3 text-center">Acciones</th>
 </tr>
@@ -361,31 +407,18 @@ Procesando documento... Por favor espera un momento.
 </div>
 </div>
 
-<div id="modalImportarExcel" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-40">
-<div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
-<h3 class="text-lg font-bold text-indigo-900 flex items-center gap-2">📊 Carga Masiva desde Excel</h3>
-<p class="text-xs text-gray-600">Selecciona tu archivo de Excel (<strong>.xlsx, .xls o .csv</strong>).</p>
-<div class="border-2 border-dashed border-indigo-200 bg-indigo-50 p-4 rounded-xl text-center">
-<input type="file" id="archivoExcelInput" accept=".xlsx, .xls, .csv" class="w-full text-xs text-gray-600">
-</div>
-<div class="flex justify-end gap-2">
-<button onclick="cerrarModalImportarExcel()" class="px-4 py-2 border rounded-lg text-xs">Cancelar</button>
-<button onclick="procesarExcel()" class="px-4 py-2 bg-indigo-700 text-white font-bold rounded-lg text-xs">⚡ Procesar y Cargar</button>
-</div>
-</div>
-</div>
-
 <div id="modalGasto" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-40">
 <div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
-<h3 class="text-lg font-bold text-red-800">Registrar Nuevo Gasto / Salida</h3>
+<h3 class="text-lg font-bold text-red-800">Registrar Gasto / Comprobante Contable</h3>
 <input type="text" id="detalleGasto" placeholder="Detalle (Ej: Viandas para viaje, Nafta, Arbitraje)" class="w-full border p-2 rounded-lg text-sm">
+<input type="text" id="comprobanteGastoInput" placeholder="N° Factura / Ticket (Ej: Factura B 0001-0022)" class="w-full border p-2 rounded-lg text-sm">
 <select id="tipoGastoSelect" class="w-full border p-2 rounded-lg text-sm">
 <option value="Comida / Alimentación Viaje">Comida / Alimentación en Viajes</option>
 <option value="Transporte / Combustible">Transporte / Combustible</option>
 <option value="Planilla / Arbitraje">Planilla / Arbitraje</option>
 <option value="Materiales / Indumentaria">Materiales / Indumentaria</option>
 <option value="Alquiler Cancha / Gimnasio">Alquiler Cancha / Gimnasio</option>
-<option value="Gastos Varios">Gastos Varios</option>
+<option value="Gastos Varios / Servicios">Gastos Varios / Servicios</option>
 </select>
 <select id="catGastoSelect" class="w-full border p-2 rounded-lg text-sm">
 <option value="General Club">General Club (Todas)</option>
@@ -402,6 +435,20 @@ Procesando documento... Por favor espera un momento.
 <div class="flex justify-end gap-2">
 <button onclick="cerrarModalGasto()" class="px-4 py-2 border rounded-lg text-xs">Cancelar</button>
 <button onclick="guardarGasto()" class="px-4 py-2 bg-red-700 text-white font-bold rounded-lg text-xs">Guardar Gasto</button>
+</div>
+</div>
+</div>
+
+<div id="modalImportarExcel" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-40">
+<div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
+<h3 class="text-lg font-bold text-indigo-900 flex items-center gap-2">📊 Carga Masiva desde Excel</h3>
+<p class="text-xs text-gray-600">Selecciona tu archivo de Excel (<strong>.xlsx, .xls o .csv</strong>).</p>
+<div class="border-2 border-dashed border-indigo-200 bg-indigo-50 p-4 rounded-xl text-center">
+<input type="file" id="archivoExcelInput" accept=".xlsx, .xls, .csv" class="w-full text-xs text-gray-600">
+</div>
+<div class="flex justify-end gap-2">
+<button onclick="cerrarModalImportarExcel()" class="px-4 py-2 border rounded-lg text-xs">Cancelar</button>
+<button onclick="procesarExcel()" class="px-4 py-2 bg-indigo-700 text-white font-bold rounded-lg text-xs">⚡ Procesar y Cargar</button>
 </div>
 </div>
 </div>
@@ -589,6 +636,7 @@ function cerrarModalImportarExcel() { document.getElementById('modalImportarExce
 function cambiarPestana(p) {
 pestanaActual = p;
 document.getElementById('vistaGeneral').classList.toggle('hidden', p !== 'general');
+document.getElementById('vistaContador').classList.toggle('hidden', p !== 'contador');
 document.getElementById('vistaViajes').classList.toggle('hidden', p !== 'viajes');
 document.getElementById('vistaEscanerSeguro').classList.toggle('hidden', p !== 'escanerSeguro');
 document.getElementById('vistaSeguro').classList.toggle('hidden', p !== 'seguro');
@@ -597,7 +645,7 @@ document.getElementById('vistaAvisos').classList.toggle('hidden', p !== 'avisos'
 document.getElementById('vistaSponsors').classList.toggle('hidden', p !== 'sponsors');
 document.getElementById('vistaGastos').classList.toggle('hidden', p !== 'gastos');
 
-document.getElementById('boxFiltroCategoria').classList.toggle('hidden', p === 'sponsors' || p === 'gastos' || p === 'escanerSeguro');
+document.getElementById('boxFiltroCategoria').classList.toggle('hidden', p === 'sponsors' || p === 'gastos' || p === 'escanerSeguro' || p === 'contador');
 
 const btnMain = document.getElementById('btnNuevoMain');
 if (p === 'sponsors') {
@@ -653,6 +701,56 @@ document.getElementById('talleJugador').value = '';
 document.getElementById('numCamisetaJugador').value = '';
 document.getElementById('aptoFisicoJugador').checked = false;
 renderizar();
+}
+
+function guardarGasto() {
+respaldarEstadoActual();
+const detalle = document.getElementById('detalleGasto').value.trim();
+const tipo = document.getElementById('tipoGastoSelect').value;
+const comprobante = document.getElementById('comprobanteGastoInput').value.trim();
+const categoria = document.getElementById('catGastoSelect').value;
+const monto = document.getElementById('montoGastoInput').value;
+const mes = document.getElementById('filtroMes').value;
+
+if (!detalle || !monto) return alert("Ingresa el detalle y monto del gasto");
+
+gastos.push({ id: Date.now(), detalle, tipo, comprobante, categoria, monto: Number(monto) || 0, mes, fecha: new Date().toLocaleDateString() });
+guardarDatos();
+cerrarModalGasto();
+document.getElementById('detalleGasto').value = '';
+document.getElementById('comprobanteGastoInput').value = '';
+document.getElementById('montoGastoInput').value = '';
+renderizar();
+}
+
+function exportarLibroDiarioContador() {
+const mes = document.getElementById('filtroMes').value;
+let csv = "Fecha,TipoAsiento,Concepto,MedioPago,Comprobante,IngresoHaber,GastoDebe\n";
+
+jugadores.forEach(j => {
+const info = pagos[`${j.id}_${mes}`];
+if (info && info.pagado) {
+const val = obtenerMontoFinal(j.id);
+csv += `"${info.fecha || '01/07/2026'}","Ingreso Cuota Social","Cuota ${mes} - ${j.nombre} (${j.categoria})","${info.metodo || 'Transferencia'}","Recibo Interno","${val}","0"\n`;
+}
+});
+
+sponsors.forEach(s => {
+if (pagosSponsors[`${s.id}_${mes}`]) {
+csv += `"${new Date().toLocaleDateString()}","Ingreso Patrocinio","Sponsor ${s.nombre} - ${mes}","Transferencia Bancaria","Aporte Sponsor","${s.monto}","0"\n`;
+}
+});
+
+gastos.filter(g => g.mes === mes).forEach(g => {
+csv += `"${g.fecha || '01/07/2026'}","Egreso / Gasto Operativo","${g.detalle} (${g.tipo})","Efectivo / Caja","${g.comprobante || 'Ticket Interno'}","0","${g.monto}"\n`;
+});
+
+const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+const url = window.URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.setAttribute('href', url);
+a.setAttribute('download', `LIBRO_DIARIO_CONTADOR_${mes.toUpperCase()}.csv`);
+a.click();
 }
 
 function cambiarCategoriaRapido(id, nuevaCat) {
@@ -986,24 +1084,6 @@ document.getElementById('montoSponsor').value = '';
 renderizar();
 }
 
-function guardarGasto() {
-respaldarEstadoActual();
-const detalle = document.getElementById('detalleGasto').value.trim();
-const tipo = document.getElementById('tipoGastoSelect').value;
-const categoria = document.getElementById('catGastoSelect').value;
-const monto = document.getElementById('montoGastoInput').value;
-const mes = document.getElementById('filtroMes').value;
-
-if (!detalle || !monto) return alert("Ingresa el detalle y monto del gasto");
-
-gastos.push({ id: Date.now(), detalle, tipo, categoria, monto: Number(monto) || 0, mes });
-guardarDatos();
-cerrarModalGasto();
-document.getElementById('detalleGasto').value = '';
-document.getElementById('montoGastoInput').value = '';
-renderizar();
-}
-
 function eliminarGasto(id) {
 if (confirm("¿Deseas eliminar este registro de gasto?")) {
 respaldarEstadoActual();
@@ -1189,6 +1269,7 @@ const listaBecas = document.getElementById('listaBecas');
 const listaAvisos = document.getElementById('listaAvisos');
 const listaSponsors = document.getElementById('listaSponsors');
 const listaGastos = document.getElementById('listaGastos');
+const tablaLibro = document.getElementById('tablaLibroDiario');
 
 lista.innerHTML = '';
 listaViajesElem.innerHTML = '';
@@ -1197,15 +1278,49 @@ listaBecas.innerHTML = '';
 listaAvisos.innerHTML = '';
 listaSponsors.innerHTML = '';
 listaGastos.innerHTML = '';
+tablaLibro.innerHTML = '';
 
 let ingresosTotales = 0;
 let gastosTotales = 0;
 
+// RENDER LIBRO DIARIO Y BALANCES
 jugadores.forEach(j => {
-if (pagos[`${j.id}_${mesFiltro}`]?.pagado) ingresosTotales += obtenerMontoFinal(j.id);
+const info = pagos[`${j.id}_${mesFiltro}`];
+if (info && info.pagado) {
+const monto = obtenerMontoFinal(j.id);
+ingresosTotales += monto;
+
+const tr = document.createElement('tr');
+tr.className = "hover:bg-slate-50";
+tr.innerHTML = `
+<td class="p-2.5 text-gray-500">${info.fecha || '01/07/2026'}</td>
+<td class="p-2.5 font-bold text-green-700">Cuota Social</td>
+<td class="p-2.5 font-semibold text-gray-800">${j.nombre} (${j.categoria})</td>
+<td class="p-2.5 text-gray-600">${info.metodo || 'Transferencia'}</td>
+<td class="p-2.5 text-gray-400">Recibo Interno</td>
+<td class="p-2.5 text-right font-bold text-green-600">$${monto.toLocaleString()}</td>
+<td class="p-2.5 text-right text-gray-400">$0</td>
+`;
+tablaLibro.appendChild(tr);
+}
 });
+
 sponsors.forEach(s => {
-if (pagosSponsors[`${s.id}_${mesFiltro}`]) ingresosTotales += s.monto;
+if (pagosSponsors[`${s.id}_${mesFiltro}`]) {
+ingresosTotales += s.monto;
+const tr = document.createElement('tr');
+tr.className = "hover:bg-purple-50";
+tr.innerHTML = `
+<td class="p-2.5 text-gray-500">${new Date().toLocaleDateString()}</td>
+<td class="p-2.5 font-bold text-purple-800">Patrocinio / Sponsor</td>
+<td class="p-2.5 font-semibold text-gray-800">${s.nombre}</td>
+<td class="p-2.5 text-gray-600">Transferencia Bancaria</td>
+<td class="p-2.5 text-gray-400">Aporte Sponsor</td>
+<td class="p-2.5 text-right font-bold text-green-600">$${(s.monto || 0).toLocaleString()}</td>
+<td class="p-2.5 text-right text-gray-400">$0</td>
+`;
+tablaLibro.appendChild(tr);
+}
 });
 
 const gastosMes = gastos.filter(g => g.mes === mesFiltro && (catFiltro === 'TODAS' || g.categoria === catFiltro || g.categoria === 'General Club'));
@@ -1216,11 +1331,25 @@ filaGasto.className = "hover:bg-red-50";
 filaGasto.innerHTML = `
 <td class="p-3 font-semibold text-gray-800">${g.detalle}</td>
 <td class="p-3 text-xs text-red-700 font-bold">${g.tipo}</td>
+<td class="p-3 text-xs text-gray-600 font-mono">${g.comprobante || '-'}</td>
 <td class="p-3"><span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs font-bold">${g.categoria}</span></td>
 <td class="p-3 font-bold text-red-600">$${g.monto.toLocaleString()}</td>
 <td class="p-3 text-center"><button onclick="eliminarGasto(${g.id})" class="px-2 py-1 text-xs bg-gray-200 text-red-600 rounded">✕</button></td>
 `;
 listaGastos.appendChild(filaGasto);
+
+const tr = document.createElement('tr');
+tr.className = "hover:bg-red-50";
+tr.innerHTML = `
+<td class="p-2.5 text-gray-500">${g.fecha || '01/07/2026'}</td>
+<td class="p-2.5 font-bold text-red-700">Gasto Operativo</td>
+<td class="p-2.5 font-semibold text-gray-800">${g.detalle} (${g.tipo})</td>
+<td class="p-2.5 text-gray-600">Caja Chica / Ef.</td>
+<td class="p-2.5 text-gray-500 font-mono">${g.comprobante || 'Ticket/S-Factura'}</td>
+<td class="p-2.5 text-right text-gray-400">$0</td>
+<td class="p-2.5 text-right font-bold text-red-600">$${g.monto.toLocaleString()}</td>
+`;
+tablaLibro.appendChild(tr);
 });
 
 if (pestanaActual === 'viajes') {
@@ -1317,7 +1446,7 @@ ${!estaPagado ? `<button onclick="enviarAvisoSponsorWhatsApp('${s.nombre}', '${s
 listaSponsors.appendChild(fila);
 });
 
-} else if (pestanaActual !== 'gastos' && pestanaActual !== 'escanerSeguro') {
+} else if (pestanaActual !== 'gastos' && pestanaActual !== 'escanerSeguro' && pestanaActual !== 'contador') {
 const filtrados = jugadores.filter(j =>
 (catFiltro === 'TODAS' || j.categoria === catFiltro) &&
 (j.nombre.toLowerCase().includes(busqueda) || (j.dni && j.dni.includes(busqueda)) || (j.tutor && j.tutor.toLowerCase().includes(busqueda)))
@@ -1403,6 +1532,10 @@ const balance = ingresosTotales - gastosTotales;
 document.getElementById('totalRecaudado').innerText = `$${ingresosTotales.toLocaleString()}`;
 document.getElementById('totalGastos').innerText = `$${gastosTotales.toLocaleString()}`;
 document.getElementById('totalBalance').innerText = `$${balance.toLocaleString()}`;
+
+document.getElementById('contIngresosTotales').innerText = `$${ingresosTotales.toLocaleString()}`;
+document.getElementById('contEgresosTotales').innerText = `$${gastosTotales.toLocaleString()}`;
+document.getElementById('contResultadoOperativo').innerText = `$${balance.toLocaleString()}`;
 }
 
 function exportarTodoExcel() {
@@ -1428,9 +1561,9 @@ csv += `"${s.nombre}","${s.ubicacion || ''}","${s.contacto || ''}","${s.tel || '
 });
 
 csv += "\n=== REGISTRO DE GASTOS Y SALIDAS (" + mes.toUpperCase() + ") ===\n";
-csv += "DetalleGasto,TipoGasto,CategoriaAsignada,MontoGasto\n";
+csv += "DetalleGasto,TipoGasto,Comprobante,CategoriaAsignada,MontoGasto\n";
 gastos.filter(g => g.mes === mes).forEach(g => {
-csv += `"${g.detalle}","${g.tipo}","${g.categoria}","${g.monto}"\n`;
+csv += `"${g.detalle}","${g.tipo}","${g.comprobante || ''}","${g.categoria}","${g.monto}"\n`;
 });
 
 const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
