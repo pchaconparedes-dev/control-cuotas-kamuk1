@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control de Cuotas - Club Deportivo Kamuk</title>
-    <!-- Tailwind CSS desde CDN para diseño moderno -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen p-4 font-sans">
@@ -136,7 +135,7 @@
 
         function registrarPago(idJugador) {
             const mes = document.getElementById('filtroMes').value;
-            const clave = ${idJugador}_${mes};
+            const clave = `${idJugador}_${mes}`;
             
             pagos[clave] = !pagos[clave];
             guardarDatos();
@@ -145,13 +144,13 @@
 
         function enviarAvisoWhatsApp(nombre, categoria, tel) {
             const mes = document.getElementById('filtroMes').value;
-            const mensaje = encodeURIComponent(Hola! Te escribimos de Club Deportivo Kamuk para recordarte que se encuentra pendiente la cuota de ${mes} para ${nombre} (${categoria}). Saludos!);
+            const mensaje = encodeURIComponent(`Hola! Te escribimos de Club Deportivo Kamuk para recordarte que se encuentra pendiente la cuota de ${mes} para ${nombre} (${categoria}). Saludos!`);
             
             let numLimpio = tel.replace(/[^0-9]/g, '');
             if(numLimpio) {
-                window.open(https://wa.me/${numLimpio}?text=${mensaje}, '_blank');
+                window.open(`https://wa.me/${numLimpio}?text=${mensaje}`, '_blank');
             } else {
-                window.open(https://wa.me/?text=${mensaje}, '_blank');
+                window.open(`https://wa.me/?text=${mensaje}`, '_blank');
             }
         }
 
@@ -173,12 +172,12 @@
             const filtrados = jugadores.filter(j => catFiltro === 'TODAS' || j.categoria === catFiltro);
 
             if (filtrados.length === 0) {
-                lista.innerHTML = <tr><td colspan="5" class="p-4 text-center text-gray-500">No hay jugadores registrados en esta categoría.</td></tr>;
+                lista.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">No hay jugadores registrados en esta categoría.</td></tr>`;
                 return;
             }
 
             filtrados.forEach(j => {
-                const clavePago = ${j.id}_${mesFiltro};
+                const clavePago = `${j.id}_${mesFiltro}`;
                 const estaPagado = pagos[clavePago];
 
                 const fila = document.createElement('tr');
@@ -189,15 +188,15 @@
                     <td class="p-3 text-gray-600">${j.tutor || '-'} <br> <span class="text-xs text-gray-400">${j.tel || ''}</span></td>
                     <td class="p-3">
                         ${estaPagado 
-                            ? <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">✓ Pagado (${mesFiltro})</span>
-                            : <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">✕ Pendiente</span>
+                            ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">✓ Pagado (${mesFiltro})</span>`
+                            : `<span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">✕ Pendiente</span>`
                         }
                     </td>
                     <td class="p-3 text-center space-x-1">
                         <button onclick="registrarPago(${j.id})" class="px-3 py-1 text-xs rounded text-white ${estaPagado ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-600 hover:bg-green-700'}">
                             ${estaPagado ? 'Marcar Pendiente' : 'Registrar Pago'}
                         </button>
-                        ${!estaPagado ? <button onclick="enviarAvisoWhatsApp('${j.nombre}', '${j.categoria}', '${j.tel}')" class="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600" title="Enviar recordatorio por WhatsApp">📲 Aviso</button> : ''}
+                        ${!estaPagado ? `<button onclick="enviarAvisoWhatsApp('${j.nombre}', '${j.categoria}', '${j.tel}')" class="px-2 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600" title="Enviar recordatorio por WhatsApp">📲 Aviso</button>` : ''}
                         <button onclick="eliminarJugador(${j.id})" class="px-2 py-1 text-xs bg-gray-200 text-red-600 rounded hover:bg-red-100">✕</button>
                     </td>
                 `;
