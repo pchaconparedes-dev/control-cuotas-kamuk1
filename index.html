@@ -8,65 +8,101 @@
 </head>
 <body class="bg-gray-100 min-h-screen p-4 font-sans">
 
-    <div class="max-w-4xl mx-auto space-y-6">
+    <!-- PANTALLA DE LOGIN (PIN) -->
+    <div id="pantallaLogin" class="fixed inset-0 bg-blue-950 flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-2xl shadow-xl max-w-sm w-full text-center space-y-4">
+            <h2 class="text-2xl font-bold text-blue-900">Club Deportivo Kamuk</h2>
+            <p class="text-gray-600 text-sm">Ingresa el PIN para acceder al control de cuotas</p>
+            <input type="password" id="inputPin" placeholder="PIN de acceso" class="w-full text-center text-xl border-2 border-gray-300 p-2 rounded-xl focus:border-blue-900 outline-none">
+            <button onclick="verificarPin()" class="w-full bg-blue-900 text-white font-bold py-2 rounded-xl hover:bg-blue-800 transition">Ingresar</button>
+            <p id="msgErrorPin" class="text-red-600 text-xs hidden">PIN incorrecto. Intenta de nuevo.</p>
+        </div>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL DE LA APP -->
+    <div id="appContenido" class="max-w-5xl mx-auto space-y-6 hidden">
         
         <!-- ENCABEZADO -->
         <header class="bg-blue-900 text-white p-6 rounded-xl shadow-md flex justify-between items-center flex-wrap gap-4">
             <div>
                 <h1 class="text-2xl font-bold">Club Deportivo Kamuk</h1>
-                <p class="text-blue-200 text-sm">Control e Historial de Cuotas Sociales</p>
+                <p class="text-blue-200 text-sm">Gestión Integral de Cuotas e Ingresos</p>
             </div>
-            <button onclick="abrirModalJugador()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow transition">
-                + Nuevo Jugador
-            </button>
+            <div class="flex gap-2 flex-wrap">
+                <button onclick="abrirModalJugador()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">+ Nuevo Jugador</button>
+                <button onclick="exportarExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">📥 Excel</button>
+                <button onclick="abrirModalBackup()" class="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">⚙️ Backup</button>
+                <button onclick="bloquearApp()" class="bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">🔒 Salir</button>
+            </div>
         </header>
 
-        <!-- SOLAPAS / PESTAÑAS DE NAVEGACIÓN -->
+        <!-- TARJETAS DE RESUMEN FINANCIERO -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-900">
+                <span class="text-xs text-gray-500 font-bold uppercase">Valor Cuota Mensual</span>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="text-lg font-bold text-gray-800">$</span>
+                    <input type="number" id="valorCuota" value="15000" onchange="guardarMontoCuota()" class="font-bold text-lg text-gray-800 border-b border-gray-300 w-28 focus:outline-none focus:border-blue-900">
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-600">
+                <span class="text-xs text-gray-500 font-bold uppercase">Recaudado este mes</span>
+                <p id="totalRecaudado" class="text-xl font-bold text-green-600 mt-1">$0</p>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-red-600">
+                <span class="text-xs text-gray-500 font-bold uppercase">Pendiente de cobro</span>
+                <p id="totalPendiente" class="text-xl font-bold text-red-600 mt-1">$0</p>
+            </div>
+        </div>
+
+        <!-- PESTAÑAS DE NAVEGACIÓN -->
         <div class="flex border-b border-gray-300 gap-2">
-            <button id="tabGeneral" onclick="cambiarPestana('general')" class="py-2 px-4 font-bold border-b-2 border-blue-900 text-blue-900 bg-white rounded-t-lg shadow-sm">
-                📋 Lista de Jugadores
-            </button>
-            <button id="tabAvisos" onclick="cambiarPestana('avisos')" class="py-2 px-4 font-bold border-b-2 border-transparent text-gray-500 hover:text-blue-900 rounded-t-lg">
-                📲 Avisos Pendientes
-            </button>
+            <button id="tabGeneral" onclick="cambiarPestana('general')" class="py-2 px-4 font-bold border-b-2 border-blue-900 text-blue-900 bg-white rounded-t-lg shadow-sm">📋 Lista de Jugadores</button>
+            <button id="tabAvisos" onclick="cambiarPestana('avisos')" class="py-2 px-4 font-bold border-b-2 border-transparent text-gray-500 hover:text-blue-900 rounded-t-lg">📲 Avisos Pendientes</button>
         </div>
 
-        <!-- FILTROS Y CONTROLES -->
+        <!-- FILTROS Y BUSCADOR -->
         <div class="bg-white p-4 rounded-xl shadow-sm flex flex-wrap gap-4 items-center justify-between">
-            <div class="flex gap-2 items-center">
-                <label class="font-semibold text-gray-700">Categoría:</label>
-                <select id="filtroCategoria" onchange="renderizar()" class="border rounded-lg p-2 bg-gray-50">
-                    <option value="TODAS">Todas las categorías</option>
-                    <option value="C7">C7</option>
-                    <option value="C9">C9</option>
-                    <option value="C11">C11</option>
-                    <option value="C13">C13</option>
-                    <option value="C15">C15</option>
-                    <option value="C17">C17</option>
-                    <option value="C20">C20</option>
-                    <option value="Primera">Primera</option>
-                </select>
+            <div class="flex gap-2 items-center flex-wrap">
+                <div>
+                    <label class="font-semibold text-xs text-gray-500 block">Categoría:</label>
+                    <select id="filtroCategoria" onchange="renderizar()" class="border rounded-lg p-2 bg-gray-50 text-sm">
+                        <option value="TODAS">Todas</option>
+                        <option value="C7">C7</option>
+                        <option value="C9">C9</option>
+                        <option value="C11">C11</option>
+                        <option value="C13">C13</option>
+                        <option value="C15">C15</option>
+                        <option value="C17">C17</option>
+                        <option value="C20">C20</option>
+                        <option value="Primera">Primera</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="font-semibold text-xs text-gray-500 block">Mes:</label>
+                    <select id="filtroMes" onchange="renderizar()" class="border rounded-lg p-2 bg-gray-50 text-sm">
+                        <option value="Enero">Enero</option>
+                        <option value="Febrero">Febrero</option>
+                        <option value="Marzo">Marzo</option>
+                        <option value="Abril">Abril</option>
+                        <option value="Mayo">Mayo</option>
+                        <option value="Junio">Junio</option>
+                        <option value="Julio" selected>Julio</option>
+                        <option value="Agosto">Agosto</option>
+                        <option value="Septiembre">Septiembre</option>
+                        <option value="Octubre">Octubre</option>
+                        <option value="Noviembre">Noviembre</option>
+                        <option value="Diciembre">Diciembre</option>
+                    </select>
+                </div>
             </div>
-            <div class="flex gap-2 items-center">
-                <label class="font-semibold text-gray-700">Mes:</label>
-                <select id="filtroMes" onchange="renderizar()" class="border rounded-lg p-2 bg-gray-50">
-                    <option value="Enero">Enero</option>
-                    <option value="Febrero">Febrero</option>
-                    <option value="Marzo">Marzo</option>
-                    <option value="Abril">Abril</option>
-                    <option value="Mayo">Mayo</option>
-                    <option value="Junio">Junio</option>
-                    <option value="Julio" selected>Julio</option>
-                    <option value="Agosto">Agosto</option>
-                    <option value="Septiembre">Septiembre</option>
-                    <option value="Octubre">Octubre</option>
-                    <option value="Noviembre">Noviembre</option>
-                    <option value="Diciembre">Diciembre</option>
-                </select>
+            <div class="w-full md:w-auto">
+                <label class="font-semibold text-xs text-gray-500 block">Buscar por Nombre:</label>
+                <input type="text" id="inputBuscar" oninput="renderizar()" placeholder="Buscar jugador..." class="border rounded-lg p-2 bg-gray-50 text-sm w-full md:w-64">
             </div>
         </div>
 
-        <!-- VISTA 1: TABLA GENERAL DE JUGADORES -->
+        <!-- VISTA GENERAL -->
         <div id="vistaGeneral" class="bg-white rounded-xl shadow-sm overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
@@ -78,19 +114,13 @@
                         <th class="p-3 text-center">Acciones</th>
                     </tr>
                 </thead>
-                <tbody id="listaJugadores" class="divide-y divide-gray-100 text-sm">
-                    <!-- Carga dinámica -->
-                </tbody>
+                <tbody id="listaJugadores" class="divide-y divide-gray-100 text-sm"></tbody>
             </table>
         </div>
 
-        <!-- VISTA 2: PESTAÑA DE AVISOS DE CUOTA IMPAGA -->
+        <!-- VISTA AVISOS PENDIENTES -->
         <div id="vistaAvisos" class="bg-white rounded-xl shadow-sm overflow-x-auto hidden p-4">
-            <h2 class="text-lg font-bold text-red-700 mb-3 flex items-center gap-2">
-                ⚠️ Recordatorios de Cuotas Pendientes
-            </h2>
-            <p class="text-xs text-gray-500 mb-4">Esta lista muestra únicamente los jugadores que no han abonado el mes seleccionado.</p>
-            
+            <h2 class="text-lg font-bold text-red-700 mb-3">⚠️ Recordatorios de Cuotas Pendientes</h2>
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-red-50 text-red-800 text-sm">
@@ -100,16 +130,14 @@
                         <th class="p-3 text-center">Acción WhatsApp</th>
                     </tr>
                 </thead>
-                <tbody id="listaAvisos" class="divide-y divide-gray-100 text-sm">
-                    <!-- Carga dinámica de pendientes -->
-                </tbody>
+                <tbody id="listaAvisos" class="divide-y divide-gray-100 text-sm"></tbody>
             </table>
         </div>
 
     </div>
 
     <!-- MODAL NUEVO JUGADOR -->
-    <div id="modalJugador" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4">
+    <div id="modalJugador" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-40">
         <div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
             <h3 class="text-lg font-bold text-gray-800">Cargar Nuevo Jugador</h3>
             <input type="text" id="nombreJugador" placeholder="Nombre y Apellido" class="w-full border p-2 rounded-lg">
@@ -132,38 +160,71 @@
         </div>
     </div>
 
+    <!-- MODAL BACKUP -->
+    <div id="modalBackup" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-40">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
+            <h3 class="text-lg font-bold text-gray-800">Copia de Seguridad (Backup)</h3>
+            <p class="text-xs text-gray-600">Exporta una copia de tus datos o impórtala en otro dispositivo.</p>
+            <button onclick="exportarBackup()" class="w-full bg-blue-900 text-white font-bold py-2 rounded-lg">💾 Descargar Backup de Datos</button>
+            <hr>
+            <div>
+                <label class="text-xs font-bold text-gray-700 block mb-1">Restaurar desde archivo Backup:</label>
+                <input type="file" id="archivoBackup" accept=".json" class="w-full border p-2 rounded-lg text-xs">
+            </div>
+            <button onclick="importarBackup()" class="w-full bg-green-600 text-white font-bold py-2 rounded-lg">📂 Cargar Backup</button>
+            <div class="flex justify-end">
+                <button onclick="cerrarModalBackup()" class="px-4 py-2 border rounded-lg text-xs">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- SCRIPT DE LÓGICA -->
     <script>
+        const PIN_CORRECTO = "1234"; // <-- PUEDES CAMBIAR TU PIN AQUÍ
         let jugadores = JSON.parse(localStorage.getItem('kamuk_jugadores')) || [];
         let pagos = JSON.parse(localStorage.getItem('kamuk_pagos')) || {};
+        let montoCuota = localStorage.getItem('kamuk_monto_cuota') || 15000;
         let pestanaActual = 'general';
+
+        document.getElementById('valorCuota').value = montoCuota;
+
+        function verificarPin() {
+            const input = document.getElementById('inputPin').value;
+            if (input === PIN_CORRECTO) {
+                document.getElementById('pantallaLogin').classList.add('hidden');
+                document.getElementById('appContenido').classList.remove('hidden');
+                renderizar();
+            } else {
+                document.getElementById('msgErrorPin').classList.remove('hidden');
+            }
+        }
+
+        function bloquearApp() {
+            document.getElementById('pantallaLogin').classList.remove('hidden');
+            document.getElementById('appContenido').classList.add('hidden');
+            document.getElementById('inputPin').value = '';
+        }
 
         function guardarDatos() {
             localStorage.setItem('kamuk_jugadores', JSON.stringify(jugadores));
             localStorage.setItem('kamuk_pagos', JSON.stringify(pagos));
         }
 
+        function guardarMontoCuota() {
+            montoCuota = document.getElementById('valorCuota').value;
+            localStorage.setItem('kamuk_monto_cuota', montoCuota);
+            renderizar();
+        }
+
         function abrirModalJugador() { document.getElementById('modalJugador').classList.remove('hidden'); }
         function cerrarModalJugador() { document.getElementById('modalJugador').classList.add('hidden'); }
+        function abrirModalBackup() { document.getElementById('modalBackup').classList.remove('hidden'); }
+        function cerrarModalBackup() { document.getElementById('modalBackup').classList.add('hidden'); }
 
-        function cambiarPestana(pestana) {
-            pestanaActual = pestana;
-            const tabG = document.getElementById('tabGeneral');
-            const tabA = document.getElementById('tabAvisos');
-            const vG = document.getElementById('vistaGeneral');
-            const vA = document.getElementById('vistaAvisos');
-
-            if (pestana === 'general') {
-                tabG.className = "py-2 px-4 font-bold border-b-2 border-blue-900 text-blue-900 bg-white rounded-t-lg shadow-sm";
-                tabA.className = "py-2 px-4 font-bold border-b-2 border-transparent text-gray-500 hover:text-blue-900 rounded-t-lg";
-                vG.classList.remove('hidden');
-                vA.classList.add('hidden');
-            } else {
-                tabA.className = "py-2 px-4 font-bold border-b-2 border-red-700 text-red-700 bg-white rounded-t-lg shadow-sm";
-                tabG.className = "py-2 px-4 font-bold border-b-2 border-transparent text-gray-500 hover:text-blue-900 rounded-t-lg";
-                vA.classList.remove('hidden');
-                vG.classList.add('hidden');
-            }
+        function cambiarPestana(p) {
+            pestanaActual = p;
+            document.getElementById('vistaGeneral').classList.toggle('hidden', p !== 'general');
+            document.getElementById('vistaAvisos').classList.toggle('hidden', p !== 'avisos');
             renderizar();
         }
 
@@ -175,22 +236,18 @@
 
             if (!nombre) return alert("Ingresa el nombre del jugador");
 
-            const nuevo = { id: Date.now(), nombre, categoria, tutor, tel };
-            jugadores.push(nuevo);
+            jugadores.push({ id: Date.now(), nombre, categoria, tutor, tel });
             guardarDatos();
             cerrarModalJugador();
-            
             document.getElementById('nombreJugador').value = '';
             document.getElementById('tutorJugador').value = '';
             document.getElementById('telJugador').value = '';
-            
             renderizar();
         }
 
         function registrarPago(idJugador) {
             const mes = document.getElementById('filtroMes').value;
             const clave = `${idJugador}_${mes}`;
-            
             pagos[clave] = !pagos[clave];
             guardarDatos();
             renderizar();
@@ -199,13 +256,8 @@
         function enviarAvisoWhatsApp(nombre, categoria, tel) {
             const mes = document.getElementById('filtroMes').value;
             const mensaje = encodeURIComponent(`Hola! Te escribimos desde el Club Deportivo Kamuk para recordarte que se encuentra pendiente el pago de la cuota correspondiente al mes de ${mes} para ${nombre} (${categoria}). Muchas gracias!`);
-            
-            let numLimpio = tel.replace(/[^0-9]/g, '');
-            if(numLimpio) {
-                window.open(`https://wa.me/${numLimpio}?text=${mensaje}`, '_blank');
-            } else {
-                window.open(`https://wa.me/?text=${mensaje}`, '_blank');
-            }
+            let num = tel.replace(/[^0-9]/g, '');
+            window.open(`https://wa.me/${num}?text=${mensaje}`, '_blank');
         }
 
         function eliminarJugador(id) {
@@ -219,71 +271,108 @@
         function renderizar() {
             const catFiltro = document.getElementById('filtroCategoria').value;
             const mesFiltro = document.getElementById('filtroMes').value;
+            const busqueda = document.getElementById('inputBuscar').value.toLowerCase();
             
             const lista = document.getElementById('listaJugadores');
             const listaAvisos = document.getElementById('listaAvisos');
-            
             lista.innerHTML = '';
             listaAvisos.innerHTML = '';
 
-            const filtrados = jugadores.filter(j => catFiltro === 'TODAS' || j.categoria === catFiltro);
+            const filtrados = jugadores.filter(j => 
+                (catFiltro === 'TODAS' || j.categoria === catFiltro) &&
+                (j.nombre.toLowerCase().includes(busqueda) || (j.tutor && j.tutor.toLowerCase().includes(busqueda)))
+            );
 
-            // RENDER VISTA GENERAL
-            if (filtrados.length === 0) {
-                lista.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">No hay jugadores registrados en esta categoría.</td></tr>`;
-            } else {
-                filtrados.forEach(j => {
-                    const clavePago = `${j.id}_${mesFiltro}`;
-                    const estaPagado = pagos[clavePago];
+            let pagadosCount = 0;
+            let pendientesCount = 0;
 
-                    const fila = document.createElement('tr');
-                    fila.className = "hover:bg-gray-50";
-                    fila.innerHTML = `
+            filtrados.forEach(j => {
+                const clavePago = `${j.id}_${mesFiltro}`;
+                const estaPagado = pagos[clavePago];
+
+                if (estaPagado) pagadosCount++; else pendientesCount++;
+
+                const fila = document.createElement('tr');
+                fila.className = "hover:bg-gray-50";
+                fila.innerHTML = `
+                    <td class="p-3 font-semibold text-gray-800">${j.nombre}</td>
+                    <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">${j.categoria}</span></td>
+                    <td class="p-3 text-gray-600">${j.tutor || '-'} <br> <span class="text-xs text-gray-400">${j.tel || ''}</span></td>
+                    <td class="p-3">
+                        ${estaPagado 
+                            ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">✓ Pagado</span>`
+                            : `<span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">✕ Pendiente</span>`
+                        }
+                    </td>
+                    <td class="p-3 text-center space-x-1">
+                        <button onclick="registrarPago(${j.id})" class="px-3 py-1 text-xs rounded text-white ${estaPagado ? 'bg-orange-500' : 'bg-green-600'}">${estaPagado ? 'Marcar Pendiente' : 'Registrar Pago'}</button>
+                        <button onclick="eliminarJugador(${j.id})" class="px-2 py-1 text-xs bg-gray-200 text-red-600 rounded">✕</button>
+                    </td>
+                `;
+                lista.appendChild(fila);
+
+                if (!estaPagado) {
+                    const filaAviso = document.createElement('tr');
+                    filaAviso.innerHTML = `
                         <td class="p-3 font-semibold text-gray-800">${j.nombre}</td>
                         <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">${j.categoria}</span></td>
-                        <td class="p-3 text-gray-600">${j.tutor || '-'} <br> <span class="text-xs text-gray-400">${j.tel || ''}</span></td>
-                        <td class="p-3">
-                            ${estaPagado 
-                                ? `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">✓ Pagado (${mesFiltro})</span>`
-                                : `<span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">✕ Pendiente</span>`
-                            }
-                        </td>
-                        <td class="p-3 text-center space-x-1">
-                            <button onclick="registrarPago(${j.id})" class="px-3 py-1 text-xs rounded text-white ${estaPagado ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-600 hover:bg-green-700'}">
-                                ${estaPagado ? 'Marcar Pendiente' : 'Registrar Pago'}
-                            </button>
-                            <button onclick="eliminarJugador(${j.id})" class="px-2 py-1 text-xs bg-gray-200 text-red-600 rounded hover:bg-red-100">✕</button>
-                        </td>
+                        <td class="p-3 text-gray-600">${j.tutor || '-'} (${j.tel || ''})</td>
+                        <td class="p-3 text-center"><button onclick="enviarAvisoWhatsApp('${j.nombre}', '${j.categoria}', '${j.tel}')" class="px-3 py-1 text-xs bg-green-600 text-white font-bold rounded-lg">📲 Recordatorio</button></td>
                     `;
-                    lista.appendChild(fila);
-                });
-            }
+                    listaAvisos.appendChild(filaAviso);
+                }
+            });
 
-            // RENDER VISTA AVISOS PENDIENTES
-            const deudores = filtrados.filter(j => !pagos[`${j.id}_${mesFiltro}`]);
-
-            if (deudores.length === 0) {
-                listaAvisos.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-green-600 font-bold">🎉 ¡Excelente! No hay cuotas pendientes para esta categoría en ${mesFiltro}.</td></tr>`;
-            } else {
-                deudores.forEach(j => {
-                    const fila = document.createElement('tr');
-                    fila.className = "hover:bg-red-50";
-                    fila.innerHTML = `
-                        <td class="p-3 font-semibold text-gray-800">${j.nombre}</td>
-                        <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">${j.categoria}</span></td>
-                        <td class="p-3 text-gray-600">${j.tutor || '-'} <br> <span class="text-xs text-gray-400">${j.tel || ''}</span></td>
-                        <td class="p-3 text-center">
-                            <button onclick="enviarAvisoWhatsApp('${j.nombre}', '${j.categoria}', '${j.tel}')" class="px-3 py-1 text-xs bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 flex items-center justify-center gap-1 mx-auto shadow-sm">
-                                📲 Enviar Recordatorio
-                            </button>
-                        </td>
-                    `;
-                    listaAvisos.appendChild(fila);
-                });
-            }
+            // Actualizar Totales Financieros
+            const valor = Number(montoCuota) || 0;
+            document.getElementById('totalRecaudado').innerText = `$${(pagadosCount * valor).toLocaleString()}`;
+            document.getElementById('totalPendiente').innerText = `$${(pendientesCount * valor).toLocaleString()}`;
         }
 
-        renderizar();
+        function exportarExcel() {
+            const mes = document.getElementById('filtroMes').value;
+            let csv = "Jugador,Categoria,Tutor,Telefono,Estado (" + mes + ")\n";
+            jugadores.forEach(j => {
+                const estado = pagos[`${j.id}_${mes}`] ? "Pagado" : "Pendiente";
+                csv += `"${j.nombre}","${j.categoria}","${j.tutor || ''}","${j.tel || ''}","${estado}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `Kamuk_Cuotas_${mes}.csv`);
+            a.click();
+        }
+
+        function exportarBackup() {
+            const data = { jugadores, pagos, montoCuota };
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `Backup_Kamuk_${Date.now()}.json`);
+            a.click();
+        }
+
+        function importarBackup() {
+            const file = document.getElementById('archivoBackup').files[0];
+            if (!file) return alert("Selecciona un archivo .json");
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.jugadores) jugadores = data.jugadores;
+                    if (data.pagos) pagos = data.pagos;
+                    if (data.montoCuota) montoCuota = data.montoCuota;
+                    guardarDatos();
+                    localStorage.setItem('kamuk_monto_cuota', montoCuota);
+                    cerrarModalBackup();
+                    renderizar();
+                    alert("¡Datos cargados con éxito!");
+                } catch(err) { alert("Archivo de backup inválido"); }
+            };
+            reader.readAsText(file);
+        }
     </script>
 </body>
 </html>
