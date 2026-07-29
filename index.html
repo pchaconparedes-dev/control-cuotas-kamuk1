@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Cuotas y Sponsors - Club Deportivo Kamuk</title>
+    <title>Control de Cuotas, Sponsors y Gastos - Club Deportivo Kamuk</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Librería SheetJS para leer archivos Excel (.xlsx) directamente -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen p-4 font-sans">
 
@@ -26,32 +28,37 @@
         <header class="bg-blue-900 text-white p-6 rounded-xl shadow-md flex justify-between items-center flex-wrap gap-4">
             <div>
                 <h1 class="text-2xl font-bold">Club Deportivo Kamuk</h1>
-                <p class="text-blue-200 text-sm">Gestión de Cuotas, Becas y Sponsors</p>
+                <p class="text-blue-200 text-sm">Gestión Integral: Cuotas, Becas, Sponsors y Gastos</p>
             </div>
             <div class="flex gap-2 flex-wrap">
                 <button id="btnNuevoMain" onclick="abrirModalJugador()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">+ Nuevo Jugador</button>
-                <button onclick="exportarExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">📥 Excel</button>
+                <button onclick="abrirModalImportarExcel()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">📊 Cargar Excel</button>
+                <button onclick="exportarExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">📥 Descargar Excel</button>
                 <button onclick="abrirModalBackup()" class="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">⚙️ Backup</button>
                 <button onclick="bloquearApp()" class="bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-3 rounded-lg shadow text-sm">🔒 Salir</button>
             </div>
         </header>
 
         <!-- TARJETAS DE RESUMEN FINANCIERO -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-900">
-                <span class="text-xs text-gray-500 font-bold uppercase">Valor Cuota Base</span>
-                <div class="flex items-center gap-2 mt-1">
-                    <span class="text-lg font-bold text-gray-800">$</span>
-                    <input type="number" id="valorCuota" value="15000" onchange="guardarMontoCuota()" class="font-bold text-lg text-gray-800 border-b border-gray-300 w-28 focus:outline-none focus:border-blue-900">
+                <span class="text-xs text-gray-500 font-bold uppercase">Cuota Base</span>
+                <div class="flex items-center gap-1 mt-1">
+                    <span class="text-md font-bold text-gray-800">$</span>
+                    <input type="number" id="valorCuota" value="15000" onchange="guardarMontoCuota()" class="font-bold text-md text-gray-800 border-b border-gray-300 w-24 focus:outline-none focus:border-blue-900">
                 </div>
             </div>
             <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-600">
-                <span class="text-xs text-gray-500 font-bold uppercase">Recaudado este mes</span>
-                <p id="totalRecaudado" class="text-xl font-bold text-green-600 mt-1">$0</p>
+                <span class="text-xs text-gray-500 font-bold uppercase">Ingresos Mes</span>
+                <p id="totalRecaudado" class="text-lg font-bold text-green-600 mt-1">$0</p>
             </div>
             <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-red-600">
-                <span class="text-xs text-gray-500 font-bold uppercase">Pendiente de cobro</span>
-                <p id="totalPendiente" class="text-xl font-bold text-red-600 mt-1">$0</p>
+                <span class="text-xs text-gray-500 font-bold uppercase">Gastos / Viajes</span>
+                <p id="totalGastos" class="text-lg font-bold text-red-600 mt-1">$0</p>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-emerald-500 bg-emerald-50">
+                <span class="text-xs text-emerald-800 font-bold uppercase">Balance en Caja</span>
+                <p id="totalBalance" class="text-lg font-bold text-emerald-900 mt-1">$0</p>
             </div>
         </div>
 
@@ -61,6 +68,7 @@
             <button id="tabBecas" onclick="cambiarPestana('becas')" class="py-2 px-4 font-bold border-b-2 border-transparent text-amber-700 hover:text-amber-900 rounded-t-lg">🎓 Becas / Descuentos</button>
             <button id="tabAvisos" onclick="cambiarPestana('avisos')" class="py-2 px-4 font-bold border-b-2 border-transparent text-gray-500 hover:text-blue-900 rounded-t-lg">📲 Avisos Pendientes</button>
             <button id="tabSponsors" onclick="cambiarPestana('sponsors')" class="py-2 px-4 font-bold border-b-2 border-transparent text-purple-700 hover:text-purple-900 rounded-t-lg">🏢 Sponsors</button>
+            <button id="tabGastos" onclick="cambiarPestana('gastos')" class="py-2 px-4 font-bold border-b-2 border-transparent text-red-700 hover:text-red-900 rounded-t-lg">💸 Gastos y Viajes</button>
         </div>
 
         <!-- FILTROS Y BUSCADOR -->
@@ -125,7 +133,6 @@
         <!-- VISTA 2: BECAS Y DESCUENTOS -->
         <div id="vistaBecas" class="bg-white rounded-xl shadow-sm overflow-x-auto hidden p-4">
             <h2 class="text-lg font-bold text-amber-800 mb-2">🎓 Asignación de Becas y Descuentos Hermanos/Familiares</h2>
-            <p class="text-xs text-gray-500 mb-4">Aplica reducciones sobre el valor base de la cuota social.</p>
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-amber-50 text-amber-900 text-sm">
@@ -162,7 +169,6 @@
             <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
                 <div>
                     <h2 class="text-lg font-bold text-purple-900">🏢 Gestión de Patrocinadores / Sponsors</h2>
-                    <p class="text-xs text-gray-500">Control de aportes comerciales del club</p>
                 </div>
                 <button onclick="abrirModalSponsor()" class="bg-purple-800 hover:bg-purple-900 text-white font-bold py-2 px-3 rounded-lg shadow text-xs">+ Agregar Sponsor</button>
             </div>
@@ -182,9 +188,85 @@
             </table>
         </div>
 
+        <!-- VISTA 5: GASTOS Y VIAJES -->
+        <div id="vistaGastos" class="bg-white rounded-xl shadow-sm overflow-x-auto hidden p-4">
+            <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+                <div>
+                    <h2 class="text-lg font-bold text-red-800">💸 Control de Gastos Generales, Comidas y Viajes</h2>
+                </div>
+                <button onclick="abrirModalGasto()" class="bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-3 rounded-lg shadow text-xs">+ Registrar Gasto</button>
+            </div>
+
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-red-50 text-red-900 text-sm">
+                        <th class="p-3">Concepto / Detalle</th>
+                        <th class="p-3">Tipo de Gasto</th>
+                        <th class="p-3">Categoría Asignada</th>
+                        <th class="p-3">Monto ($)</th>
+                        <th class="p-3 text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="listaGastos" class="divide-y divide-gray-100 text-sm"></tbody>
+            </table>
+        </div>
+
     </div>
 
-    <!-- MODAL REGISTRAR PAGO -->
+    <!-- MODAL CARGAR JUGADORES DESDE EXCEL -->
+    <div id="modalImportarExcel" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-40">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
+            <h3 class="text-lg font-bold text-indigo-900 flex items-center gap-2">📊 Carga Masiva desde Excel</h3>
+            <p class="text-xs text-gray-600">Selecciona tu archivo de Excel (<strong>.xlsx, .xls o .csv</strong>). Debe incluir las columnas: <em>Nombre, Categoria, Tutor, Telefono</em>.</p>
+            
+            <div class="border-2 border-dashed border-indigo-200 bg-indigo-50 p-4 rounded-xl text-center">
+                <input type="file" id="archivoExcelInput" accept=".xlsx, .xls, .csv" class="w-full text-xs text-gray-600">
+            </div>
+
+            <div class="flex justify-end gap-2">
+                <button onclick="cerrarModalImportarExcel()" class="px-4 py-2 border rounded-lg text-xs">Cancelar</button>
+                <button onclick="procesarExcel()" class="px-4 py-2 bg-indigo-700 text-white font-bold rounded-lg text-xs">⚡ Procesar y Cargar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL REGISTRAR GASTO -->
+    <div id="modalGasto" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-40">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
+            <h3 class="text-lg font-bold text-red-800">Registrar Nuevo Gasto / Salida</h3>
+            <input type="text" id="detalleGasto" placeholder="Detalle (Ej: Viandas para viaje, Nafta, Arbitraje)" class="w-full border p-2 rounded-lg text-sm">
+            
+            <select id="tipoGastoSelect" class="w-full border p-2 rounded-lg text-sm">
+                <option value="Comida / Alimentación Viaje">Comida / Alimentación en Viajes</option>
+                <option value="Transporte / Combustible">Transporte / Combustible</option>
+                <option value="Planilla / Arbitraje">Planilla / Arbitraje</option>
+                <option value="Materiales / Indumentaria">Materiales / Indumentaria</option>
+                <option value="Alquiler Cancha / Gimnasio">Alquiler Cancha / Gimnasio</option>
+                <option value="Gastos Varios">Gastos Varios</option>
+            </select>
+
+            <select id="catGastoSelect" class="w-full border p-2 rounded-lg text-sm">
+                <option value="General Club">General Club (Todas)</option>
+                <option value="C7">C7</option>
+                <option value="C9">C9</option>
+                <option value="C11">C11</option>
+                <option value="C13">C13</option>
+                <option value="C15">C15</option>
+                <option value="C17">C17</option>
+                <option value="C20">C20</option>
+                <option value="Primera">Primera</option>
+            </select>
+
+            <input type="number" id="montoGastoInput" placeholder="Monto del Gasto ($)" class="w-full border p-2 rounded-lg text-sm">
+            
+            <div class="flex justify-end gap-2">
+                <button onclick="cerrarModalGasto()" class="px-4 py-2 border rounded-lg text-xs">Cancelar</button>
+                <button onclick="guardarGasto()" class="px-4 py-2 bg-red-700 text-white font-bold rounded-lg text-xs">Guardar Gasto</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL REGISTRAR PAGO JUGADOR -->
     <div id="modalPago" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-40">
         <div class="bg-white rounded-xl p-6 w-full max-w-sm space-y-4">
             <h3 class="text-lg font-bold text-gray-800">Registrar Pago de Cuota</h3>
@@ -269,8 +351,9 @@
         
         let jugadores = JSON.parse(localStorage.getItem('kamuk_jugadores')) || [];
         let sponsors = JSON.parse(localStorage.getItem('kamuk_sponsors')) || [];
-        let becas = JSON.parse(localStorage.getItem('kamuk_becas')) || {}; // id: %_descuento
-        let pagos = JSON.parse(localStorage.getItem('kamuk_pagos')) || {}; // clave: { pagado: true, metodo: "Efectivo", fecha: "..." }
+        let gastos = JSON.parse(localStorage.getItem('kamuk_gastos')) || [];
+        let becas = JSON.parse(localStorage.getItem('kamuk_becas')) || {};
+        let pagos = JSON.parse(localStorage.getItem('kamuk_pagos')) || {};
         let pagosSponsors = JSON.parse(localStorage.getItem('kamuk_pagos_sponsors')) || {};
         let montoCuota = localStorage.getItem('kamuk_monto_cuota') || 15000;
         let pestanaActual = 'general';
@@ -298,6 +381,7 @@
         function guardarDatos() {
             localStorage.setItem('kamuk_jugadores', JSON.stringify(jugadores));
             localStorage.setItem('kamuk_sponsors', JSON.stringify(sponsors));
+            localStorage.setItem('kamuk_gastos', JSON.stringify(gastos));
             localStorage.setItem('kamuk_becas', JSON.stringify(becas));
             localStorage.setItem('kamuk_pagos', JSON.stringify(pagos));
             localStorage.setItem('kamuk_pagos_sponsors', JSON.stringify(pagosSponsors));
@@ -313,8 +397,12 @@
         function cerrarModalJugador() { document.getElementById('modalJugador').classList.add('hidden'); }
         function abrirModalSponsor() { document.getElementById('modalSponsor').classList.remove('hidden'); }
         function cerrarModalSponsor() { document.getElementById('modalSponsor').classList.add('hidden'); }
+        function abrirModalGasto() { document.getElementById('modalGasto').classList.remove('hidden'); }
+        function cerrarModalGasto() { document.getElementById('modalGasto').classList.add('hidden'); }
         function abrirModalBackup() { document.getElementById('modalBackup').classList.remove('hidden'); }
         function cerrarModalBackup() { document.getElementById('modalBackup').classList.add('hidden'); }
+        function abrirModalImportarExcel() { document.getElementById('modalImportarExcel').classList.remove('hidden'); }
+        function cerrarModalImportarExcel() { document.getElementById('modalImportarExcel').classList.add('hidden'); }
 
         function cambiarPestana(p) {
             pestanaActual = p;
@@ -322,13 +410,19 @@
             document.getElementById('vistaBecas').classList.toggle('hidden', p !== 'becas');
             document.getElementById('vistaAvisos').classList.toggle('hidden', p !== 'avisos');
             document.getElementById('vistaSponsors').classList.toggle('hidden', p !== 'sponsors');
-            document.getElementById('boxFiltroCategoria').classList.toggle('hidden', p === 'sponsors');
+            document.getElementById('vistaGastos').classList.toggle('hidden', p !== 'gastos');
+            
+            document.getElementById('boxFiltroCategoria').classList.toggle('hidden', p === 'sponsors' || p === 'gastos');
             
             const btnMain = document.getElementById('btnNuevoMain');
             if (p === 'sponsors') {
                 btnMain.className = "bg-purple-800 hover:bg-purple-900 text-white font-bold py-2 px-3 rounded-lg shadow text-sm";
                 btnMain.innerText = "+ Nuevo Sponsor";
                 btnMain.onclick = abrirModalSponsor;
+            } else if (p === 'gastos') {
+                btnMain.className = "bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-3 rounded-lg shadow text-sm";
+                btnMain.innerText = "+ Registrar Gasto";
+                btnMain.onclick = abrirModalGasto;
             } else {
                 btnMain.className = "bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded-lg shadow text-sm";
                 btnMain.innerText = "+ Nuevo Jugador";
@@ -355,6 +449,56 @@
             renderizar();
         }
 
+        function procesarExcel() {
+            const fileInput = document.getElementById('archivoExcelInput');
+            const file = fileInput.files[0];
+            
+            if (!file) return alert("Por favor selecciona un archivo de Excel");
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const primeraHoja = workbook.SheetNames[0];
+                    const hoja = workbook.Sheets[primeraHoja];
+                    const filas = XLSX.utils.sheet_to_json(hoja, { defval: "" });
+
+                    if (filas.length === 0) return alert("El archivo no contiene filas con datos.");
+
+                    let agregados = 0;
+                    filas.forEach((fila, idx) => {
+                        // Buscar propiedades sin importar mayúsculas/minúsculas
+                        let nombre = fila.Nombre || fila.nombre || fila["Nombre y Apellido"] || fila.Jugador || fila.jugador || "";
+                        let categoria = fila.Categoria || fila.categoria || fila.Categoría || "C11";
+                        let tutor = fila.Tutor || fila.tutor || fila.Responsable || "";
+                        let tel = fila.Telefono || fila.telefono || fila.Teléfono || fila.Celular || "";
+
+                        if (nombre) {
+                            jugadores.push({
+                                id: Date.now() + idx,
+                                nombre: String(nombre).trim(),
+                                categoria: String(categoria).trim().toUpperCase(),
+                                tutor: String(tutor).trim(),
+                                tel: String(tel).trim()
+                            });
+                            agregados++;
+                        }
+                    });
+
+                    guardarDatos();
+                    cerrarModalImportarExcel();
+                    fileInput.value = "";
+                    renderizar();
+                    alert(`¡Éxito! Se importaron ${agregados} jugadores correctamente.`);
+
+                } catch (err) {
+                    alert("Error al leer el archivo. Asegúrate de que sea un Excel válido.");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
         function guardarSponsor() {
             const nombre = document.getElementById('nombreSponsor').value.trim();
             const ubicacion = document.getElementById('ubicacionSponsor').value.trim();
@@ -373,6 +517,31 @@
             document.getElementById('telSponsor').value = '';
             document.getElementById('montoSponsor').value = '';
             renderizar();
+        }
+
+        function guardarGasto() {
+            const detalle = document.getElementById('detalleGasto').value.trim();
+            const tipo = document.getElementById('tipoGastoSelect').value;
+            const categoria = document.getElementById('catGastoSelect').value;
+            const monto = document.getElementById('montoGastoInput').value;
+            const mes = document.getElementById('filtroMes').value;
+
+            if (!detalle || !monto) return alert("Ingresa el detalle y monto del gasto");
+
+            gastos.push({ id: Date.now(), detalle, tipo, categoria, monto: Number(monto) || 0, mes });
+            guardarDatos();
+            cerrarModalGasto();
+            document.getElementById('detalleGasto').value = '';
+            document.getElementById('montoGastoInput').value = '';
+            renderizar();
+        }
+
+        function eliminarGasto(id) {
+            if (confirm("¿Deseas eliminar este registro de gasto?")) {
+                gastos = gastos.filter(g => g.id !== id);
+                guardarDatos();
+                renderizar();
+            }
         }
 
         function obtenerMontoFinal(idJugador) {
@@ -502,14 +671,40 @@
             const listaBecas = document.getElementById('listaBecas');
             const listaAvisos = document.getElementById('listaAvisos');
             const listaSponsors = document.getElementById('listaSponsors');
+            const listaGastos = document.getElementById('listaGastos');
             
             lista.innerHTML = '';
             listaBecas.innerHTML = '';
             listaAvisos.innerHTML = '';
             listaSponsors.innerHTML = '';
+            listaGastos.innerHTML = '';
 
-            let pagadosCount = 0;
-            let pendientesCount = 0;
+            let ingresosTotales = 0;
+            let gastosTotales = 0;
+
+            // CALCULO INGRESOS JUGADORES + SPONSORS DEL MES
+            jugadores.forEach(j => {
+                if (pagos[`${j.id}_${mesFiltro}`]?.pagado) ingresosTotales += obtenerMontoFinal(j.id);
+            });
+            sponsors.forEach(s => {
+                if (pagosSponsors[`${s.id}_${mesFiltro}`]) ingresosTotales += s.monto;
+            });
+
+            // CALCULO GASTOS DEL MES
+            const gastosMes = gastos.filter(g => g.mes === mesFiltro && (catFiltro === 'TODAS' || g.categoria === catFiltro || g.categoria === 'General Club'));
+            gastosMes.forEach(g => {
+                gastosTotales += g.monto;
+                const filaGasto = document.createElement('tr');
+                filaGasto.className = "hover:bg-red-50";
+                filaGasto.innerHTML = `
+                    <td class="p-3 font-semibold text-gray-800">${g.detalle}</td>
+                    <td class="p-3 text-xs text-red-700 font-bold">${g.tipo}</td>
+                    <td class="p-3"><span class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs font-bold">${g.categoria}</span></td>
+                    <td class="p-3 font-bold text-red-600">$${g.monto.toLocaleString()}</td>
+                    <td class="p-3 text-center"><button onclick="eliminarGasto(${g.id})" class="px-2 py-1 text-xs bg-gray-200 text-red-600 rounded">✕</button></td>
+                `;
+                listaGastos.appendChild(filaGasto);
+            });
 
             if (pestanaActual === 'sponsors') {
                 const sponsorsFiltrados = sponsors.filter(s => 
@@ -520,8 +715,6 @@
                 sponsorsFiltrados.forEach(s => {
                     const clavePago = `${s.id}_${mesFiltro}`;
                     const estaPagado = pagosSponsors[clavePago];
-
-                    if (estaPagado) pagadosCount += s.monto; else pendientesCount += s.monto;
 
                     const fila = document.createElement('tr');
                     fila.className = "hover:bg-purple-50";
@@ -545,7 +738,7 @@
                     listaSponsors.appendChild(fila);
                 });
 
-            } else {
+            } else if (pestanaActual !== 'gastos') {
                 const filtrados = jugadores.filter(j => 
                     (catFiltro === 'TODAS' || j.categoria === catFiltro) &&
                     (j.nombre.toLowerCase().includes(busqueda) || (j.tutor && j.tutor.toLowerCase().includes(busqueda)))
@@ -558,8 +751,6 @@
                     const montoFinal = obtenerMontoFinal(j.id);
                     const desc = Number(becas[j.id]) || 0;
                     const mesesDeuda = contarMesesDeudaAnual(j.id);
-
-                    if (estaPagado) pagadosCount += montoFinal; else pendientesCount += montoFinal;
 
                     // 1. RENDER LISTA JUGADORES
                     const fila = document.createElement('tr');
@@ -627,15 +818,23 @@
                 });
             }
 
-            document.getElementById('totalRecaudado').innerText = `$${pagadosCount.toLocaleString()}`;
-            document.getElementById('totalPendiente').innerText = `$${pendientesCount.toLocaleString()}`;
+            // Actualizar Tarjetas Financieras
+            const balance = ingresosTotales - gastosTotales;
+            document.getElementById('totalRecaudado').innerText = `$${ingresosTotales.toLocaleString()}`;
+            document.getElementById('totalGastos').innerText = `$${gastosTotales.toLocaleString()}`;
+            document.getElementById('totalBalance').innerText = `$${balance.toLocaleString()}`;
         }
 
         function exportarExcel() {
             const mes = document.getElementById('filtroMes').value;
             let csv = "";
 
-            if (pestanaActual === 'sponsors') {
+            if (pestanaActual === 'gastos') {
+                csv = "Detalle,TipoGasto,Categoria,Monto,Mes\n";
+                gastos.filter(g => g.mes === mes).forEach(g => {
+                    csv += `"${g.detalle}","${g.tipo}","${g.categoria}","${g.monto}","${g.mes}"\n`;
+                });
+            } else if (pestanaActual === 'sponsors') {
                 csv = "Sponsor,Ubicacion,Contacto,Telefono,Monto,Estado (" + mes + ")\n";
                 sponsors.forEach(s => {
                     const estado = pagosSponsors[`${s.id}_${mes}`] ? "Pagado" : "Pendiente";
@@ -657,12 +856,12 @@
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.setAttribute('href', url);
-            a.setAttribute('download', `Kamuk_${pestanaActual === 'sponsors' ? 'Sponsors' : 'Cuotas'}_${mes}.csv`);
+            a.setAttribute('download', `Kamuk_${pestanaActual.toUpperCase()}_${mes}.csv`);
             a.click();
         }
 
         function exportarBackup() {
-            const data = { jugadores, sponsors, becas, pagos, pagosSponsors, montoCuota };
+            const data = { jugadores, sponsors, gastos, becas, pagos, pagosSponsors, montoCuota };
             const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -680,6 +879,7 @@
                     const data = JSON.parse(e.target.result);
                     if (data.jugadores) jugadores = data.jugadores;
                     if (data.sponsors) sponsors = data.sponsors;
+                    if (data.gastos) gastos = data.gastos;
                     if (data.becas) becas = data.becas;
                     if (data.pagos) pagos = data.pagos;
                     if (data.pagosSponsors) pagosSponsors = data.pagosSponsors;
